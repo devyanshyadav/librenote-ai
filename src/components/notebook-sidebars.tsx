@@ -6,7 +6,8 @@ import {
   useNotebookSources,
 } from "@/tanstack/queries/source.query";
 import type { ReactNode } from "react";
-import { useLayoutEffect } from "react";
+import { useCallback, useLayoutEffect } from "react";
+import { toast } from "sonner";
 import { SourceTypeIcon } from "@/components/notebook/source-type-icon";
 import { SourceViewer } from "@/components/notebook/source-viewer";
 import { SourcesPanel } from "@/components/notebook/sources-panel";
@@ -18,6 +19,8 @@ import {
 import { useStudioStore } from "@/stores/studio.store";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
+import { useElementFullscreen } from "@/hooks/use-element-fullscreen";
+import { cn } from "@/lib/utils";
 import {
   SidebarInset,
   SidebarMenu,
@@ -129,6 +132,16 @@ import type { NotebookSourceListItem } from "@/types";
 export function NotebookRightSidebar({ notebookId }: { notebookId: string }) {
   const { activeArtifactId } = useStudioStore();
   const { data: sources = [] } = useNotebookSources(notebookId);
+  const { ref: artifactViewRef, isFullscreen, toggle } = useElementFullscreen();
+
+  const handleToggleFullscreen = useCallback(async () => {
+    try {
+      await toggle();
+    } catch {
+      toast.error("Fullscreen is not available in this browser.");
+    }
+  }, [toggle]);
+
   const selectedReadyCount = sources.filter(
     (source: NotebookSourceListItem) => source.isSelected && source.ingestStatus === "ready",
   ).length;
@@ -152,9 +165,15 @@ export function NotebookRightSidebar({ notebookId }: { notebookId: string }) {
     <AppSidebar
       side="right"
       collapsible={activeArtifactId ? "none" : "icon"}
+      innerRef={activeArtifactId ? artifactViewRef : undefined}
+      innerClassName={cn(isFullscreen && "bg-background")}
       header={
         activeArtifactId ? (
-          <StudioArtifactViewHeader notebookId={notebookId} />
+          <StudioArtifactViewHeader
+            notebookId={notebookId}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={handleToggleFullscreen}
+          />
         ) : (
           <SidebarPanelHeader title={headerTitle} />
         )

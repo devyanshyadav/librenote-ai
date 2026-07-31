@@ -6,8 +6,7 @@ import {
   Handle,
   Position,
   ReactFlow,
-  useEdgesState,
-  useNodesState,
+  useReactFlow,
   type Node,
   type NodeProps,
 } from "@xyflow/react";
@@ -27,15 +26,20 @@ import { cn } from "@/lib/utils";
 import {
   buildBranchPrompt,
   buildMindMapElements,
+  getDefaultCollapsedIds,
   layoutMindMap,
   MIND_MAP_NODE_HEIGHT,
   MIND_MAP_NODE_WIDTH,
-  type MindMapNodeData,
-  type MindMapSourceRef,
+  MIND_MAP_SOURCE_COLORS,
+  type MindMapFlowNodeData,
 } from "@/lib/studio/mind-map-utils";
 import { useCitationStore } from "@/stores/citation.store";
 import { useNotebookChatStore } from "@/stores/notebook-chat.store";
-import type { MindMapContent, StudioArtifactViewMode } from "@/types";
+import type {
+  MindMapContent,
+  NotebookSourceRef,
+  StudioArtifactViewMode,
+} from "@/types";
 
 import "@xyflow/react/dist/style.css";
 
@@ -46,7 +50,7 @@ const MindMapSelectContext = createContext<(nodeId: string) => void>(() => {});
 const MindMapNode = memo(function MindMapNode({
   id,
   data,
-}: NodeProps<Node<MindMapNodeData>>) {
+}: NodeProps<Node<MindMapFlowNodeData>>) {
   const onToggle = useContext(MindMapToggleContext);
   const onSelect = useContext(MindMapSelectContext);
 
@@ -125,34 +129,33 @@ const MindMapNode = memo(function MindMapNode({
 
 const nodeTypes = { mindMap: MindMapNode };
 
-function MindMapLegend({ sources }: { sources: MindMapSourceRef[] }) {
-  const sourcedNodes = sources.filter(Boolean);
+function MindMapFitView({ layoutKey }: { layoutKey: string }) {
+  const { fitView } = useReactFlow();
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      void fitView({ padding: 0.2, maxZoom: 1.75, duration: 120 });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [layoutKey, fitView]);
+
+  return null;
+}
+
+function MindMapLegend({ sources }: { sources: NotebookSourceRef[] }) {
+  if (sources.length === 0) {
+    return null;
+  }
 
   return (
     <div className="absolute bottom-3 left-14 z-10 flex max-w-[calc(100%-5rem)] flex-wrap gap-2 rounded-lg border border-border bg-card/95 px-3 py-2 text-xs text-muted-foreground shadow-lg backdrop-blur-sm">
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block h-0.5 w-4 rounded bg-primary" />
-        Hierarchy
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block h-0.5 w-4 rounded bg-emerald-500" />
-        Supports
-      </span>
-      <span className="flex items-center gap-1.5">
-        <span className="inline-block h-0.5 w-4 border-t border-dashed border-destructive" />
-        Contradicts
-      </span>
-      {sourcedNodes.slice(0, 4).map((source, index) => (
+      {sources.slice(0, 4).map((source, index) => (
         <span key={source.id} className="flex items-center gap-1.5">
           <span
             className="inline-block size-2 rounded-full"
             style={{
-              backgroundColor: [
-                "hsl(var(--primary))",
-                "#7dd3a0",
-                "#fbbf24",
-                "#60a5fa",
-              ][index % 4],
+              backgroundColor:
+                MIND_MAP_SOURCE_COLORS[index % MIND_MAP_SOURCE_COLORS.length],
             }}
           />
           <span className="max-w-24 truncate">{source.title}</span>
@@ -169,7 +172,7 @@ function MindMapDetailPanel({
   onOpenSource,
   showNotebookActions,
 }: {
-  node: MindMapNodeData;
+  node: MindMapFlowNodeData;
   onClose: () => void;
   onAskBranch: () => void;
   onOpenSource: () => void;
@@ -235,32 +238,26 @@ function MindMapDetailPanel({
   );
 }
 
-export function MindMapViewer({
+function MindMapGraph({
+  base,
   content,
-  sources = [],
-  mode = "studio",
+  sources,
+  mode,
 }: {
+  base: ReturnType<typeof buildMindMapElements>;
   content: MindMapContent;
-  sources?: MindMapSourceRef[];
-  mode?: StudioArtifactViewMode;
+  sources: NotebookSourceRef[];
+  mode: StudioArtifactViewMode;
 }) {
-  const sourceRefs = useMemo(
-    () => sources.map((source) => ({ id: source.id, title: source.title })),
-    [sources],
-  );
-  const base = useMemo(
-    () => buildMindMapElements(content, sourceRefs),
-    [content, sourceRefs],
-  );
-  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(
-    () => new Set(),
+  const [collapsedIds, setCollapsedIds] = useState(() =>
+    getDefaultCollapsedIds(base.treeEdges, base.rootId),
   );
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const openSource = useCitationStore((state) => state.openSource);
   const handleSubmit = useNotebookChatStore((state) => state.handleSubmit);
   const chatStatus = useNotebookChatStore((state) => state.chatStatus);
 
-  const layout = useMemo(
+  const { nodes, edges } = useMemo(
     () =>
       layoutMindMap(
         base.nodes,
@@ -272,38 +269,33 @@ export function MindMapViewer({
     [base, collapsedIds, selectedNodeId],
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
-
   const selectedNode = useMemo(() => {
     if (!selectedNodeId) {
       return null;
     }
-
-    return (
-      layout.nodes.find((node) => node.id === selectedNodeId)?.data ?? null
-    );
-  }, [layout.nodes, selectedNodeId]);
+    return nodes.find((node) => node.id === selectedNodeId)?.data ?? null;
+  }, [nodes, selectedNodeId]);
 
   const legendSources = useMemo(() => {
     const sourceIds = new Set(
       content.nodes
-        .map((node) => node.sourceId)
+        .map((node) => node.data.sourceId)
         .filter((sourceId): sourceId is string => Boolean(sourceId)),
     );
+    return sources.filter((source) => sourceIds.has(source.id));
+  }, [content.nodes, sources]);
 
-    return sourceRefs.filter((source) => sourceIds.has(source.id));
-  }, [content.nodes, sourceRefs]);
-
-  useEffect(() => {
-    setCollapsedIds(new Set());
-    setSelectedNodeId(null);
-  }, [base]);
-
-  useEffect(() => {
-    setNodes(layout.nodes);
-    setEdges(layout.edges);
-  }, [layout, setNodes, setEdges]);
+  const fitViewKey = useMemo(
+    () =>
+      nodes
+        .filter((node) => !node.hidden)
+        .map(
+          (node) =>
+            `${node.id}:${Math.round(node.position.x)}:${Math.round(node.position.y)}`,
+        )
+        .join("|"),
+    [nodes],
+  );
 
   const onToggle = useCallback((nodeId: string) => {
     setCollapsedIds((current) => {
@@ -314,7 +306,6 @@ export function MindMapViewer({
         next.add(nodeId);
       }
       return next;
-      // biome-ignore lint/correctness/useExhaustiveDependencies: layout needs current state updates
     });
   }, []);
 
@@ -326,16 +317,15 @@ export function MindMapViewer({
     if (!selectedNodeId) {
       return;
     }
-
     if (chatStatus === "streaming" || chatStatus === "submitted") {
       toast.error("Wait for the current response to finish.");
       return;
     }
-
-    const prompt = buildBranchPrompt(selectedNodeId, content, base.treeEdges);
-
     try {
-      await handleSubmit({ text: prompt, files: [] });
+      await handleSubmit({
+        text: buildBranchPrompt(selectedNodeId, content, base.treeEdges),
+        files: [],
+      });
       toast.success("Question sent to chat");
     } catch {
       toast.error("Failed to send question to chat.");
@@ -346,7 +336,6 @@ export function MindMapViewer({
     if (!selectedNode?.sourceId || !selectedNode.sourceTitle) {
       return;
     }
-
     openSource(selectedNode.sourceId, selectedNode.sourceTitle);
   }, [openSource, selectedNode]);
 
@@ -354,29 +343,25 @@ export function MindMapViewer({
     <MindMapToggleContext.Provider value={onToggle}>
       <MindMapSelectContext.Provider value={onSelect}>
         <div
-          className="relative h-[calc(100vh-10rem)]"
+          className="relative h-full min-h-[24rem]"
           onPointerDown={(event) => event.stopPropagation()}
           onWheel={(event) => event.stopPropagation()}
         >
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.2 }}
             minZoom={0.35}
             maxZoom={1.75}
             panOnScroll
             zoomOnScroll
             nodesConnectable={false}
             elementsSelectable={false}
-            onlyRenderVisibleElements
             noDragClassName={INTERACTIVE_CLASS}
             noPanClassName={INTERACTIVE_CLASS}
             proOptions={{ hideAttribution: true }}
           >
+            <MindMapFitView layoutKey={fitViewKey} />
             <Background color="rgba(156, 163, 175, 0.6)" gap={24} size={2} />
             <Controls
               showInteractive={false}
@@ -398,5 +383,35 @@ export function MindMapViewer({
         </div>
       </MindMapSelectContext.Provider>
     </MindMapToggleContext.Provider>
+  );
+}
+
+export function MindMapViewer({
+  content,
+  sources = [],
+  mode = "studio",
+}: {
+  content: MindMapContent;
+  sources?: NotebookSourceRef[];
+  mode?: StudioArtifactViewMode;
+}) {
+  const base = useMemo(
+    () => buildMindMapElements(content, sources),
+    [content, sources],
+  );
+
+  const graphKey = useMemo(
+    () => content.nodes.map((node) => node.id).join("|"),
+    [content.nodes],
+  );
+
+  return (
+    <MindMapGraph
+      key={graphKey}
+      base={base}
+      content={content}
+      sources={sources}
+      mode={mode}
+    />
   );
 }

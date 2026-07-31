@@ -70,7 +70,7 @@ export function Header({ showOpenRouterHint = false }: HeaderProps) {
               </code>{" "}
               to .env.local, then restart{" "}
               <code className="rounded bg-muted px-1 py-0.5 font-mono text-[10px]">
-                bun dev
+                bun start
               </code>
             </p>
             <a

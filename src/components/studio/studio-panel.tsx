@@ -4,8 +4,9 @@ import {
   ChevronLeft,
   EllipsisVertical,
   Link2,
+  Maximize2,
+  Minimize2,
   Printer,
-  Trash2,
 } from "lucide-react";
 import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -286,8 +287,12 @@ export function StudioPanel({ notebookId }: { notebookId: string }) {
 
 export function StudioArtifactViewHeader({
   notebookId,
+  isFullscreen = false,
+  onToggleFullscreen,
 }: {
   notebookId: string;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
   const { activeArtifactId, setActiveArtifactId } = useStudioStore();
   const { data: artifacts = [] } = useStudioArtifacts(notebookId);
@@ -349,7 +354,23 @@ export function StudioArtifactViewHeader({
             {formatStudioArtifactType(activeListItem.type)}
           </Badge>
 
-          <DropdownMenu>
+          {onToggleFullscreen ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleFullscreen}
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? (
+                <Minimize2 className="size-4" />
+              ) : (
+                <Maximize2 className="size-4" />
+              )}
+            </Button>
+          ) : null}
+
+      {!isFullscreen && (
+            <DropdownMenu>
             <DropdownMenuTrigger>
               <Button variant="ghost" size="icon">
                 <EllipsisVertical className="size-4" />
@@ -378,6 +399,7 @@ export function StudioArtifactViewHeader({
               ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
+      )}
         </div>
       </SidebarMenuItem>
     </SidebarMenu>
@@ -407,13 +429,13 @@ export function StudioArtifactViewPanel({
 
   return (
     <ScrollArea className="h-full">
-      <div className="p-3">
-        <StudioArtifactViewer
-          artifact={activeArtifactDetail}
-          sources={sources}
-          notebookId={notebookId}
-        />
-      </div>
+      <div className="h-full min-h-0 max-w-5xl mx-auto">
+      <StudioArtifactViewer
+        artifact={activeArtifactDetail}
+        sources={sources}
+        notebookId={notebookId}
+      />
+    </div>
     </ScrollArea>
   );
 }

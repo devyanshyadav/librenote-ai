@@ -3,7 +3,7 @@ import { AppError } from "@/lib/app-error";
 export const OPENROUTER_KEYS_URL = "https://openrouter.ai/keys";
 
 export const OPENROUTER_SETUP_HINT =
-  "OpenRouter API key is missing. Add OPENROUTER_API_KEY to .env.local, restart the server, then try again.";
+  "OpenRouter API key is missing. Add OPENROUTER_API_KEY to .env.local, restart with bun start, then try again.";
 
 export function isOpenRouterConfigured(): boolean {
   return Boolean(process.env.OPENROUTER_API_KEY?.trim());

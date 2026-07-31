@@ -243,16 +243,16 @@ Choose the best tableKind for the material and give each source proportional cov
     title: "Mind Map",
     schema: mindMapContentSchema,
     schemaDescription:
-      "Mind map graph with a descriptive title, nodes, and edges",
+      "Mind map: nodes with id and data (label, summary, sourceId?), edges with id, source, target",
     system: (ctx) => {
-      const base = `You create mind map graphs from research notebook content.
+      const base = `You create mind maps from research notebook content.
 ${ARTIFACT_TITLE_RULE}
-Use a central root node, branch nodes for major themes, and leaf nodes for details.
-Build a strict tree: every non-root node must have exactly one "hierarchy" parent edge.
-Add optional "supports", "contradicts", or "relates" edges only between nodes that are NOT parent-child.
-Each node needs a short label and a 1-2 sentence summary grounded in the sources.
-Set sourceId to the matching source id from the brief when a node is primarily from one source.
-Keep labels short. Do not invent information.`;
+Each node: { id, data: { label, summary, sourceId? } }. Each edge: { id, source, target }.
+Build one tree: edge source is the parent, target is the child. Root id "root".
+Drill down recursively (root → themes → sub-themes → details, 4+ levels).
+Use source-specific labels — not generic titles like "Overview" or "Key Points".
+Every non-root node needs a short label and 1–2 sentence summary in data.summary.
+Set data.sourceId when a node is primarily from one source.`;
       const instructions = buildMindMapInstructionBlock(ctx?.options);
 
       return instructions ? `${base}\n\n${instructions}` : base;
@@ -263,9 +263,9 @@ Keep labels short. Do not invent information.`;
 Available source ids:
 ${buildSourceIdList(brief)}
 
-Create a mind map with a clear tree hierarchy from all selected sources.
-The root node id must be "root".
-Use hierarchy edges for the tree. Add up to 4 cross-links for agreements (supports) or tensions (contradicts) across branches.`,
+Create a mind map from all selected sources.
+Root id must be "root". Every non-root node needs exactly one edge from its parent.
+Set data.sourceId on nodes grounded in a single source.`,
   },
   audio_overview: {
     title: "Audio Overview",

@@ -333,31 +333,24 @@ export const dataTableContentSchema = z.object({
 
 export type DataTableContent = z.infer<typeof dataTableContentSchema>;
 
-export const mindMapEdgeKindSchema = z.enum([
-  "hierarchy",
-  "supports",
-  "contradicts",
-  "relates",
-]);
-
-export type MindMapEdgeKind = z.infer<typeof mindMapEdgeKindSchema>;
-
 export const mindMapNodeSchema = z.object({
   id: z.string(),
-  label: z.string(),
-  summary: z.string().max(400).optional(),
-  sourceId: z.string().uuid().optional(),
+  data: z.object({
+    label: z.string(),
+    summary: z.string(),
+    sourceId: z.string().uuid().optional(),
+  }),
 });
 
 export const mindMapEdgeSchema = z.object({
+  id: z.string(),
   source: z.string(),
   target: z.string(),
-  kind: mindMapEdgeKindSchema.default("hierarchy"),
 });
 
 export const mindMapContentSchema = z.object({
   title: z.string(),
-  nodes: z.array(mindMapNodeSchema).min(3).max(30),
+  nodes: z.array(mindMapNodeSchema).min(3).max(45),
   edges: z.array(mindMapEdgeSchema),
 });
 

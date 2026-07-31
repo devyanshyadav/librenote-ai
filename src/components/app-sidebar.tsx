@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,6 +8,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
 type AppSidebarProps = {
   children?: ReactNode;
@@ -17,6 +18,9 @@ type AppSidebarProps = {
   header?: ReactNode;
   content?: ReactNode;
   footer?: ReactNode;
+  /** Wraps header + content (+ footer) for fullscreen or other container needs. */
+  innerRef?: RefObject<HTMLDivElement | null>;
+  innerClassName?: string;
 };
 
 export function AppSidebar({
@@ -27,13 +31,30 @@ export function AppSidebar({
   header,
   content,
   footer,
+  innerRef,
+  innerClassName,
 }: AppSidebarProps) {
+  const body = (
+    <>
+      {header ? <SidebarHeader>{header}</SidebarHeader> : null}
+      {content ? <SidebarContent>{content}</SidebarContent> : null}
+      {footer ? <SidebarFooter>{footer}</SidebarFooter> : null}
+    </>
+  );
+
   return (
     <>
       <Sidebar side={side} collapsible={collapsible} className={className}>
-        {header ? <SidebarHeader>{header}</SidebarHeader> : null}
-        {content ? <SidebarContent>{content}</SidebarContent> : null}
-        {footer ? <SidebarFooter>{footer}</SidebarFooter> : null}
+        {innerRef ? (
+          <div
+            ref={innerRef}
+            className={cn("flex min-h-0 flex-1 flex-col", innerClassName)}
+          >
+            {body}
+          </div>
+        ) : (
+          body
+        )}
         <SidebarRail />
       </Sidebar>
       {children}

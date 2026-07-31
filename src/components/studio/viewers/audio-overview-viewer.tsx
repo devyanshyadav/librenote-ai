@@ -436,7 +436,7 @@ export function AudioOverviewViewer({
                 {content.title}
               </div>
               {content.description ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="line-clamp-2 text-sm text-muted-foreground">
                   {content.description}
                 </p>
               ) : null}
