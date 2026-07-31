@@ -1,14 +1,24 @@
-# LibreNote AI
+<p align="center">
+  <img src="./public/logo.png" alt="LibreNote AI logo" width="72" height="72" />
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Bun](https://img.shields.io/badge/Bun-1.0+-black?logo=bun&logoColor=white)](https://bun.sh)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org)
+<h1 align="center">LibreNote AI</h1>
 
-**The open-source, self-hosted alternative to NotebookLM.**
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green.svg" alt="MIT License" /></a>
+  <a href="https://bun.sh"><img src="https://img.shields.io/badge/Bun-1.0+-black?logo=bun&logoColor=white" alt="Bun" /></a>
+  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white" alt="Next.js" /></a>
+</p>
 
-Upload your research — PDFs, articles, videos, spreadsheets — and chat with grounded answers and citations. Turn sources into flashcards, quizzes, mind maps, reports, data tables, podcast-style audio overviews, and notes. **Your data stays on your machine or server**, not in a proprietary cloud.
+<p align="center"><strong>The open-source, self-hosted alternative to NotebookLM.</strong></p>
 
-> **Technical setup, commands, and deployment** → see **[Documentation](docs/README.md)**
+<p align="center">
+  Upload your sources, chat with grounded citations, and generate studio artifacts — flashcards, quizzes, mind maps, audio overviews, and more — fully on your machine or server.
+</p>
+
+<p align="center">
+  <strong>Technical setup, commands, and deployment</strong> → <a href="docs/README.md">Documentation</a>
+</p>
 
 ---
 
