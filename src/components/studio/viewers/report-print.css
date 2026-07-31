@@ -1,0 +1,23 @@
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  body {
+    background: #fff !important;
+  }
+
+  .report-print-document {
+    max-width: none;
+    padding: 0;
+  }
+
+  .report-print-section {
+    break-inside: avoid-page;
+  }
+
+  .report-print-header,
+  .report-print-section h2 {
+    break-after: avoid-page;
+  }
+}
