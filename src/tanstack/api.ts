@@ -5,7 +5,6 @@ export const apiClient = axios.create({ baseURL: "/api" });
 
 apiClient.interceptors.response.use(
   (response) => {
-    // if success=false, throw custom error
     if (response.data && response.data.success === false) {
       return Promise.reject(new Error(response.data.error || "Unknown error"));
     }
@@ -13,7 +12,7 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     const message =
-      error.response?.data?.error || error.message || "An error occurred";
+      error.response?.data?.error || error.message || "Something went wrong.";
     return Promise.reject(new Error(message));
   },
 );

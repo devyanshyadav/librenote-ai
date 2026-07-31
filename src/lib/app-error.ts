@@ -146,7 +146,22 @@ export function getErrorMessage(
   error: unknown,
   fallback = "Something went wrong. Please try again.",
 ): string {
+  if (isAppError(error)) {
+    return error.message;
+  }
+
   if (error instanceof Error && error.message.trim()) {
+    const trimmed = error.message.trim();
+    if (trimmed.startsWith("{")) {
+      try {
+        const parsed = JSON.parse(trimmed) as { error?: string; message?: string };
+        if (parsed.error?.trim()) return parsed.error.trim();
+        if (parsed.message?.trim()) return parsed.message.trim();
+      } catch {
+        // Not JSON.
+      }
+    }
+
     const cause =
       error.cause instanceof Error
         ? error.cause.message

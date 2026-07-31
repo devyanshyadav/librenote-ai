@@ -72,7 +72,7 @@ export function useNotebookChat(
 
   const onError = useCallback((error: Error) => {
     console.error("Chat error:", error);
-    toast.error(getErrorMessage(error, "An error occurred during generation."));
+    toast.error(getErrorMessage(error));
   }, []);
 
   const onFinish = useCallback(

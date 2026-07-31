@@ -8,6 +8,7 @@ import {
   toUIMessageStream,
 } from "ai";
 import { getChatModel } from "@/lib/ai/openrouter";
+import { getErrorMessage, isAppError } from "@/lib/app-error";
 import {
   saveAssistantMessage,
   saveUserMessage,
@@ -78,6 +79,7 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream<NotebookChatUIMessage>({
       originalMessages: messages,
+      onError: getErrorMessage,
       execute: async ({ writer }) => {
         const catalog = await getNotebookSourceCatalog(notebookId, sourceIds);
         const agent = new ToolLoopAgent({
@@ -102,8 +104,7 @@ export async function POST(request: Request) {
           toUIMessageStream({
             stream: result.stream,
             sendReasoning: true,
-            onError: (error) =>
-              error instanceof Error ? error.message : String(error),
+            onError: getErrorMessage,
           }),
         );
       },
@@ -125,8 +126,11 @@ export async function POST(request: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const message =
-      error instanceof Error ? error.message : "An unexpected error occurred.";
+    if (isAppError(error)) {
+      return Response.json({ error: error.message }, { status: error.statusCode });
+    }
+
+    const message = getErrorMessage(error);
 
     return Response.json({ error: message }, { status: 500 });
   }
