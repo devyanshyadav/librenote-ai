@@ -37,8 +37,8 @@ Works on **macOS, Linux, and Windows** (Docker Desktop + Bun).
 ## Local setup
 
 ```bash
-git clone https://github.com/devyanshyadav/librenoteai.git
-cd librenoteai
+git clone https://github.com/devyanshyadav/librenote-ai.git
+cd librenote-ai
 bun run setup
 ```
 
@@ -210,6 +210,8 @@ bun dev
 - API keys stay in your environment — never hardcoded in source
 - Only `.env.example` belongs in git — `.env` and `.env.local` are gitignored
 - Row-level security policies scope notebooks and sources per authenticated user
+
+To report a security issue in this repository, see **[SECURITY.md](../SECURITY.md)** (private disclosure — do not open public issues for vulnerabilities).
 
 ---
 

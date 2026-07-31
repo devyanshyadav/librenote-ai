@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/logo.png" alt="LibreNote AI logo" width="72" height="72" />
+  <img src="./public/logo.png" alt="LibreNote AI logo" width="80" height="80" />
 </p>
 
 <h1 align="center">LibreNote AI</h1>
@@ -76,8 +76,8 @@ Ask questions and get answers **grounded in your uploads**, with inline citation
 You need two things installed: **[Docker Desktop](https://docs.docker.com/get-docker/)** (running) and **[Bun](https://bun.sh)**.
 
 ```bash
-git clone https://github.com/devyanshyadav/librenoteai.git
-cd librenoteai
+git clone https://github.com/devyanshyadav/librenote-ai.git
+cd librenote-ai
 bun run setup
 ```
 
@@ -132,6 +132,19 @@ Full architecture, scripts, and configuration → **[Documentation](docs/README.
 
 ---
 
+## Author
+
+Built by **[Devyansh Yadav](https://www.devyanshyadav.com/)**
+
+- [GitHub](https://github.com/devyanshyadav)
+- [X](https://x.com/DevyanshYadavv)
+- [LinkedIn](https://www.linkedin.com/in/devyansh-yadav/)
+- [hello@devyanshyadav.com](mailto:hello@devyanshyadav.com)
+
+---
+
 ## License
 
 [MIT](LICENSE) — use, modify, and deploy freely.
+
+*NotebookLM and Google Gemini are trademarks of Google LLC. LibreNote AI is an independent open-source project and is not affiliated with or endorsed by Google.*

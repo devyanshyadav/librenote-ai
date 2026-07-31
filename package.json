@@ -2,7 +2,17 @@
   "name": "librenoteai",
   "version": "0.1.0",
   "description": "The open-source, self-hosted alternative to NotebookLM. Spins up locally in one command. Powered by any model via OpenRouter.",
-  "private": true,
+  "license": "MIT",
+  "author": "Devyansh Yadav <hello@devyanshyadav.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devyanshyadav/librenote-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/devyanshyadav/librenote-ai/issues"
+  },
+  "homepage": "https://github.com/devyanshyadav/librenote-ai#readme",
+  "private": false,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
