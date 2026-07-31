@@ -1,141 +1,126 @@
 # LibreNote AI
 
-**The open-source, self-hosted alternative to NotebookLM.** Spins up locally in one command. Powered by any model via [OpenRouter](https://openrouter.ai).
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Bun](https://img.shields.io/badge/Bun-1.0+-black?logo=bun&logoColor=white)](https://bun.sh)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white)](https://nextjs.org)
 
-Upload PDFs, web pages, YouTube transcripts, and more. Chat with grounded citations over your sources. Generate studio artifacts — flashcards, quizzes, mind maps, audio overviews, and notes — without sending your data to a proprietary cloud.
+**The open-source, self-hosted alternative to NotebookLM.**
+
+Upload your research — PDFs, articles, videos, spreadsheets — and chat with grounded answers and citations. Turn sources into flashcards, quizzes, mind maps, reports, data tables, podcast-style audio overviews, and notes. **Your data stays on your machine or server**, not in a proprietary cloud.
+
+> **Technical setup, commands, and deployment** → see **[Documentation](docs/README.md)**
+
+---
 
 ## Why LibreNote AI?
 
-| | NotebookLM | LibreNote AI |
-|---|------------|--------------|
-| **Hosting** | Google-hosted | Self-hosted on your machine or server |
-| **Data privacy** | Processed in Google's cloud | Your Postgres, your Supabase, your keys |
-| **Models** | Fixed Google models | Any model on OpenRouter (Claude, GPT, Gemini, Llama, …) |
-| **Open source** | Closed | MIT licensed — inspect, fork, extend |
-| **Setup** | Sign in with Google | `bun run setup && bun dev` |
+If you like the *idea* of NotebookLM but want ownership of your data, choice of AI models, and the freedom to self-host — LibreNote AI is built for that.
 
-## Features
+| | NotebookLM (Gemini) | LibreNote AI |
+|---|---------------------|--------------|
+| **Hosting** | Google-hosted | Self-hosted — your machine or your server |
+| **Data privacy** | Processed in Google's cloud | Your Postgres, your Supabase, your API keys |
+| **AI models** | Google Gemini only | Any model on [OpenRouter](https://openrouter.ai) (Claude, GPT, Gemini, Llama, …) |
+| **Audio overviews** | Google-hosted, usage limits apply | Podcast-style audio you generate on your stack |
+| **Studio artifacts** | Limited set, closed product | 7 types: mind maps, flashcards, quizzes, reports, data tables, audio, notes |
+| **Open source** | Closed | MIT — inspect, fork, extend |
+| **Multi-user** | Tied to Google account | Self-hosted auth with per-user data isolation |
+| **Setup** | Sign in with Google | One command: `bun run setup` |
 
-- **Source ingestion** — PDF, DOCX, XLSX, web URLs, YouTube, and pasted text
-- **RAG chat** — Vector search with pgvector, reranking, and inline citations
-- **Studio** — Flashcards, quizzes, mind maps, slide decks, audio overviews, and rich notes
-- **Self-hosted auth** — Supabase Auth (email/password, Google OAuth)
-- **One-command local dev** — Docker + Supabase + schema push + seed
+---
 
-## Quick start (local)
+## What you can do
 
-**Prerequisites**
+### Add sources
+Bring in the material you already work with:
 
-- [Docker Desktop](https://docs.docker.com/get-docker/) (running)
-- [Bun](https://bun.sh)
+- **Documents** — PDF, Word, spreadsheets, plain text, Markdown
+- **Web** — paste a URL or import links in bulk
+- **YouTube** — transcripts from video links
+- **Audio** — mp3, wav, m4a, and more
+- **Notes** — paste text directly
 
-Supabase CLI is included as a dev dependency — no separate install needed.
+### Chat with your sources
+Ask questions and get answers **grounded in your uploads**, with inline citations that jump back to the exact passage.
 
-**One-command setup**
+### Studio — turn research into outputs
+| Artifact | What it's for |
+|----------|----------------|
+| **Mind map** | Visual map of concepts and connections |
+| **Flashcards** | Study cards from your material |
+| **Quiz** | Test yourself on what you read |
+| **Report** | Structured write-up with charts |
+| **Data table** | Comparisons, timelines, metrics |
+| **Audio overview** | Podcast-style summary you can listen to |
+| **Note** | Rich notes pinned to your notebook |
+
+### Keep control
+- Sources, embeddings, and chat history live in **your** database
+- File uploads go to **your** storage
+- No vendor lock-in on which AI model you use
+
+---
+
+## Get started
+
+You need two things installed: **[Docker Desktop](https://docs.docker.com/get-docker/)** (running) and **[Bun](https://bun.sh)**.
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/devyanshyadav/librenoteai.git
 cd librenoteai
-bun install
 bun run setup
-bun dev
 ```
 
-Setup will:
+Setup installs everything, starts the local database, builds the app, and opens **http://localhost:3000**. Sign up with email and password — you're in.
 
-1. Start local Supabase for **this repo only** (`project_id: librenoteai`) — skips start if already running
-2. Update `.env.local` (preserves your other env vars like `OPENROUTER_API_KEY`)
-3. Run `drizzle-kit push` to sync the schema from `src/db/schema.ts`
-4. Apply `supabase/seed.sql` (storage buckets + auth profile trigger)
+<details>
+<summary><strong>Do I need to be a developer?</strong></summary>
 
-Setup never stops or removes your other Docker containers. It only uses ports **54320–54324** for this project's Supabase stack.
+Not deeply. If you can install Docker and Bun and paste commands into a terminal, the one-command setup handles the rest. For step-by-step instructions, env variables, cloud hosting, and troubleshooting, use the **[full documentation](docs/README.md)**.
 
-> **Upgrading from an older clone?** If you previously used `project_id: notebook-llm`, stop that stack first (`bun run supabase:stop` in the old directory, or remove the `supabase_*_notebook-llm` Docker containers) so ports 54320–54324 are free.
+</details>
 
-OpenRouter is **optional during setup**. Add `OPENROUTER_API_KEY` to `.env.local` when you're ready for chat and AI features — the app shows a hint in the header until then.
+<details>
+<summary><strong>Do I need an OpenRouter API key right away?</strong></summary>
 
-**Run the app**
+No. Setup works without it. Add `OPENROUTER_API_KEY` to `.env.local` when you want chat, embeddings, and studio features. The app reminds you in the header until you add one. Keys are created at [openrouter.ai/keys](https://openrouter.ai/keys).
 
-```bash
-bun dev
-```
+</details>
 
-Open [http://localhost:3000](http://localhost:3000), create an account with email/password, and start a notebook.
+<details>
+<summary><strong>Can I use cloud hosting instead of my laptop?</strong></summary>
 
-> Local auth has email confirmations disabled — sign up signs you in immediately.  
-> Password reset emails are captured locally at [http://127.0.0.1:54324](http://127.0.0.1:54324) (Mailpit), not your real inbox.
+Yes. Run LibreNote AI on a VPS or your own server with a [cloud Supabase](https://supabase.com) project instead of local Docker. See **[Cloud Supabase setup](docs/README.md#cloud-supabase)** in the docs.
 
-## Useful commands
+</details>
 
-| Command | Description |
-|---------|-------------|
-| `bun run setup` | Full local setup (Supabase + schema push + seed) |
-| `bun run setup:db` | Push schema + seed (local Supabase running, or cloud `.env.local`) |
-| `bun run dev` | Start Next.js dev server |
-| `bun run db:push` | Sync schema from Drizzle (`src/db/schema.ts`) |
-| `bun run db:generate` | Generate SQL migrations from schema changes |
-| `bun run db:migrate` | Apply generated migrations (production/CI) |
-| `bun run supabase:status` | Show local Supabase URLs and keys |
-| `bun run supabase:stop` | Stop local Supabase containers |
-| `bun run db:studio` | Open Drizzle Studio |
+<details>
+<summary><strong>How is this different from just using ChatGPT with uploads?</strong></summary>
 
-**Local services after setup**
+LibreNote AI is built around **notebooks and sources** — not one-off chats. Your files are chunked, embedded, and searched with citations. Studio turns the same sources into study and presentation artifacts. Everything persists in your own database, organized by notebook.
 
-| Service | URL |
-|---------|-----|
-| App | http://localhost:3000 |
-| Supabase Studio | http://127.0.0.1:54323 |
-| Email inbox (local) | http://127.0.0.1:54324 |
+</details>
 
-## Environment variables
+---
 
-Copy `.env.example` to `.env.local` or let `bun run setup` generate it for local dev.
+## Privacy at a glance
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OPENROUTER_API_KEY` | No | Chat, embeddings, reranking, and studio (add when ready) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Supabase anon/public key (`NEXT_PUBLIC_SUPABASE_ANON_KEY` also works) |
-| `DATABASE_URL` | Yes | Postgres connection string (direct or session pooler) |
+| What | Where it lives |
+|------|----------------|
+| Uploaded files | Your Supabase Storage |
+| Text & embeddings | Your Postgres database |
+| API keys | Your `.env.local` file (never committed to git) |
+| Other users' data | Isolated — each account only sees their own notebooks |
 
-## Cloud Supabase
+---
 
-Use cloud Supabase when you do not want local Docker. The app uses the same env vars — only the values change.
+## Tech stack (summary)
 
-1. Create a project at [supabase.com](https://supabase.com)
-2. Copy `.env.example` → `.env.local` and fill in:
-   - **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-   - **anon public key** → `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-   - **Database URI** (direct or session mode) → `DATABASE_URL`
-   - Your OpenRouter key → `OPENROUTER_API_KEY` (optional — add when you need AI features)
-3. In Supabase **Authentication → URL configuration**, set Site URL to your app origin and add `https://your-domain/auth/callback` to redirect URLs
-4. Run database bootstrap (pgvector + schema + storage buckets + auth trigger):
+Next.js · Supabase · PostgreSQL + pgvector · Drizzle · OpenRouter
 
-```bash
-bun run setup:db
-```
+Full architecture, scripts, and configuration → **[Documentation](docs/README.md)**
 
-5. Start the app: `bun dev`
-
-`setup:db` runs the same steps as local setup after Supabase is configured: enables `vector`, pushes the Drizzle schema, and applies `supabase/seed.sql`.
-
-## Tech stack
-
-- **Next.js** — App Router
-- **Supabase** — Auth + Storage
-- **PostgreSQL + pgvector** — RAG vector search
-- **Drizzle ORM** — Database schema and migrations
-- **OpenRouter** — LLM, embeddings, rerank
-
-## Security & privacy
-
-LibreNote AI is designed to run entirely on infrastructure you control:
-
-- Source files and embeddings live in **your** Postgres database
-- File uploads go to **your** Supabase Storage buckets
-- API keys (`OPENROUTER_API_KEY`, `DATABASE_URL`) stay in your environment — never hardcoded
-- Only `.env.example` belongs in git — `.env` and `.env.local` are gitignored
-- Row-level security policies scope data to notebook owners
+---
 
 ## License
 
