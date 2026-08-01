@@ -40,6 +40,7 @@
         "@tiptap/starter-kit": "^3.29.0",
         "@xyflow/react": "^12.11.2",
         "ai": "^7.0.19",
+        "ai-fallback": "3",
         "ansi-to-react": "^6.2.6",
         "axios": "^1.18.1",
         "canvas-confetti": "^1.9.4",
@@ -755,6 +756,8 @@
     "agent-base": ["agent-base@6.0.2", "", { "dependencies": { "debug": "4" } }, "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ=="],
 
     "ai": ["ai@7.0.26", "", { "dependencies": { "@ai-sdk/gateway": "4.0.19", "@ai-sdk/provider": "4.0.3", "@ai-sdk/provider-utils": "5.0.9" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-gzLoOHoXFJNcxrzFyHClbZsDEA1z0LNm3Kwq8lEWIfL+8wEEir+eDJqJJbkEJdLxGrc0IuBkybxEDzkbvSavjw=="],
+
+    "ai-fallback": ["ai-fallback@3.0.0", "", { "peerDependencies": { "@ai-sdk/provider": ">=4.0.0", "@ai-sdk/provider-utils": ">=5.0.0" } }, "sha512-gWDUeKWT6ySREk7rpBkQUioxYI8pTbaCf//c9vpcBmSqtDsjKceOaccDO7jrSKtXgB9LEE0fd2H1K80zuLBNmQ=="],
 
     "ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
 
