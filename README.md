@@ -9,8 +9,10 @@
   <a href="https://bun.sh"><img src="https://img.shields.io/badge/Bun-1.0+-black?logo=bun&logoColor=white" alt="Bun" /></a>
   <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js&logoColor=white" alt="Next.js" /></a>
 </p>
-
 <p align="center"><strong>The open-source, self-hosted alternative to NotebookLM.</strong></p>
+<p align="center">
+  <img src="./public/banner.png" alt="LibreNote AI interface — sources, chat, and studio artifacts" width="920" />
+</p>
 
 <p align="center">
   Upload your sources, chat with grounded citations, and generate studio artifacts — flashcards, quizzes, mind maps, audio overviews, and more — fully on your machine or server.
