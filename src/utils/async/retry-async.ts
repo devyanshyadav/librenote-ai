@@ -2,6 +2,11 @@ interface RetryAsyncOptions {
   maxAttempts?: number;
   baseDelayMs?: number;
   maxDelayMs?: number;
+  onRetry?: (context: {
+    attempt: number;
+    maxAttempts: number;
+    error: unknown;
+  }) => void;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -16,6 +21,7 @@ export async function retryAsync<T>(
     maxAttempts = 3,
     baseDelayMs = 1_000,
     maxDelayMs = 8_000,
+    onRetry,
   }: RetryAsyncOptions = {},
 ): Promise<T> {
   let lastError: unknown;
@@ -29,6 +35,8 @@ export async function retryAsync<T>(
       if (attempt === maxAttempts) {
         break;
       }
+
+      onRetry?.({ attempt, maxAttempts, error });
 
       const delay = Math.min(baseDelayMs * 2 ** (attempt - 1), maxDelayMs);
       await sleep(delay);

@@ -509,34 +509,42 @@ export const mindMapNodeSchema = z.object({
 export const mindMapEdgeSchema = z.object({
   id: z
     .string()
-    .describe('Unique edge id (e.g. "edge-root-theme-1").'),
+    .describe('Unique edge id string (e.g. "edge-root-theme-1").'),
   source: z
     .string()
-    .describe("Parent node id — the source of the tree edge."),
+    .describe(
+      "Parent node id from nodes — must exactly match an existing node id (edge goes parent → child).",
+    ),
   target: z
     .string()
-    .describe("Child node id — must reference an existing node id."),
+    .describe(
+      "Child node id from nodes — must exactly match an existing node id and cannot be \"root\".",
+    ),
 });
 
-export const mindMapContentSchema = z.object({
-  title: z
-    .string()
-    .describe(
-      "Descriptive mind map title naming the notebook topic (not a generic label like 'Mind Map').",
-    ),
-  nodes: z
-    .array(mindMapNodeSchema)
-    .min(3)
-    .max(45)
-    .describe(
-      "All nodes in the map. Must include a root node with id \"root\".",
-    ),
-  edges: z
-    .array(mindMapEdgeSchema)
-    .describe(
-      "Tree edges connecting parent (source) to child (target). Every non-root node needs exactly one incoming edge.",
-    ),
-});
+export const mindMapContentSchema = z
+  .object({
+    title: z
+      .string()
+      .describe(
+        "Descriptive mind map title naming the notebook topic (not a generic label like 'Mind Map').",
+      ),
+    nodes: z
+      .array(mindMapNodeSchema)
+      .min(3)
+      .max(45)
+      .describe(
+        'All nodes. Required per node: { "id": string, "data": { "label": string, "summary": string, "sourceId"?: uuid } }. Never put label or summary on the node root — only inside data.',
+      ),
+    edges: z
+      .array(mindMapEdgeSchema)
+      .describe(
+        "Tree edges only. One edge per non-root node (edges.length = nodes.length - 1). Each: { id, source: parentNodeId, target: childNodeId }. Every source/target must match a nodes[].id.",
+      ),
+  })
+  .describe(
+    'Single-root mind map tree. Include exactly one root node with id "root". Connect every other node with one edge from its parent.',
+  );
 
 export type MindMapContent = z.infer<typeof mindMapContentSchema>;
 
@@ -690,7 +698,7 @@ export interface StudioArtifactListItem {
   id: string;
   notebookId: string;
   title: string;
-  status: "pending" | "processing" | "completed" | "failed";
+  status: "pending" | "processing" | "completed" | "failed" | "timeout";
   type: StudioArtifactType;
   createdAt: string;
   updatedAt: string;

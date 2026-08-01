@@ -11,8 +11,10 @@ import {
 import type { z } from "zod";
 import { repairJsonTextValue } from "@/lib/ai/json-repair";
 import { getChatModel } from "@/lib/ai/openrouter";
+import { retryAsync } from "@/utils/async/retry-async";
 
-const MAX_RETRIES = 3;
+const MAX_ATTEMPTS = 3;
+const API_MAX_RETRIES = 2;
 
 let structuredOutputModel: LanguageModel | null = null;
 
@@ -35,7 +37,83 @@ export type GenerateStructuredOutputOptions<OBJECT> = {
   schemaDescription?: string;
   tools?: ToolSet;
   stopWhen?: StopCondition<ToolSet>;
+  onAttemptFailed?: (context: {
+    attempt: number;
+    maxAttempts: number;
+    error: unknown;
+  }) => void;
 };
+
+async function generateStructuredOutputAttempt<OBJECT>(
+  options: GenerateStructuredOutputOptions<OBJECT>,
+): Promise<{
+  output: OBJECT;
+  toolResults: { toolName: string; output: unknown }[];
+}> {
+  const result = await generateText({
+    model: getStructuredOutputModel(),
+    output: Output.object({
+      schema: options.schema,
+      name: options.schemaName,
+      description: options.schemaDescription,
+    }),
+    system: options.system,
+    prompt: options.prompt,
+    maxRetries: API_MAX_RETRIES,
+    tools: options.tools,
+    stopWhen: options.stopWhen,
+  });
+
+  if (result.output == null) {
+    throw new Error("Model did not return structured output.");
+  }
+
+  return {
+    output: result.output,
+    toolResults: result.toolResults.map((toolResult) => ({
+      toolName: toolResult.toolName,
+      output: toolResult.output,
+    })),
+  };
+}
+
+async function recoverStructuredOutput<OBJECT>(
+  options: GenerateStructuredOutputOptions<OBJECT>,
+  error: unknown,
+): Promise<{
+  output: OBJECT;
+  toolResults: { toolName: string; output: unknown }[];
+} | null> {
+  if (
+    NoObjectGeneratedError.isInstance(error) &&
+    error.text &&
+    error.finishReason === "length"
+  ) {
+    throw new Error(
+      "Model output was truncated. Try fewer sources or regenerate.",
+      { cause: error },
+    );
+  }
+
+  if (!NoObjectGeneratedError.isInstance(error) || !error.text) {
+    return null;
+  }
+
+  const repairedText = await repairJsonTextValue(error.text);
+  if (!repairedText) {
+    return null;
+  }
+
+  const parsed = (options.schema as z.ZodType<OBJECT>).safeParse(
+    JSON.parse(repairedText),
+  );
+
+  if (!parsed.success) {
+    return null;
+  }
+
+  return { output: parsed.data, toolResults: [] };
+}
 
 export async function generateStructuredOutput<OBJECT>(
   options: GenerateStructuredOutputOptions<OBJECT>,
@@ -43,61 +121,19 @@ export async function generateStructuredOutput<OBJECT>(
   output: OBJECT;
   toolResults: { toolName: string; output: unknown }[];
 }> {
-  const run = () =>
-    generateText({
-      model: getStructuredOutputModel(),
-      output: Output.object({
-        schema: options.schema,
-        name: options.schemaName,
-        description: options.schemaDescription,
-      }),
-      system: options.system,
-      prompt: options.prompt,
-      maxRetries: MAX_RETRIES,
-      tools: options.tools,
-      stopWhen: options.stopWhen,
-    });
-
-  try {
-    const result = await run();
-
-    if (result.output == null) {
-      throw new Error("Model did not return structured output.");
-    }
-
-    return {
-      output: result.output,
-      toolResults: result.toolResults.map((toolResult) => ({
-        toolName: toolResult.toolName,
-        output: toolResult.output,
-      })),
-    };
-  } catch (error) {
-    if (
-      NoObjectGeneratedError.isInstance(error) &&
-      error.text &&
-      error.finishReason === "length"
-    ) {
-      throw new Error(
-        "Model output was truncated. Try fewer sources or regenerate.",
-        { cause: error },
-      );
-    }
-
-    if (NoObjectGeneratedError.isInstance(error) && error.text) {
-      const repairedText = await repairJsonTextValue(error.text);
-
-      if (repairedText) {
-        const parsed = (options.schema as z.ZodType<OBJECT>).safeParse(
-          JSON.parse(repairedText),
-        );
-
-        if (parsed.success) {
-          return { output: parsed.data, toolResults: [] };
+  return retryAsync(
+    async () => {
+      try {
+        return await generateStructuredOutputAttempt(options);
+      } catch (error) {
+        const recovered = await recoverStructuredOutput(options, error);
+        if (recovered) {
+          return recovered;
         }
-      }
-    }
 
-    throw error;
-  }
+        throw error;
+      }
+    },
+    { maxAttempts: MAX_ATTEMPTS, onRetry: options.onAttemptFailed },
+  );
 }

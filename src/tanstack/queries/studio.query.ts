@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getStudioArtifactStatus } from "@/lib/studio/studio-artifact-status";
 import { studioClient } from "@/tanstack/clients";
 import type {
   StudioArtifactListItem,
@@ -9,11 +10,11 @@ import { studioQueryKeys } from "./studio.query-keys";
 
 export { studioQueryKeys } from "./studio.query-keys";
 
-function hasProcessingArtifacts(
-  artifacts: StudioArtifactListItem[] | undefined,
-) {
+function shouldPollArtifacts(artifacts: StudioArtifactListItem[] | undefined) {
   return (
-    artifacts?.some((artifact) => artifact.status === "processing") ?? false
+    artifacts?.some(
+      (artifact) => getStudioArtifactStatus(artifact) === "processing",
+    ) ?? false
   );
 }
 
@@ -37,7 +38,7 @@ export const useStudioArtifacts = (notebookId: string) => {
     },
     enabled: !!notebookId,
     refetchInterval: (query) =>
-      hasProcessingArtifacts(query.state.data) ? 2000 : false,
+      shouldPollArtifacts(query.state.data) ? 2000 : false,
   });
 };
 
@@ -50,7 +51,10 @@ export const useStudioArtifact = (artifactId: string) => {
     },
     enabled: !!artifactId,
     refetchInterval: (query) =>
-      query.state.data?.status === "processing" ? 2000 : false,
+      query.state.data &&
+      getStudioArtifactStatus(query.state.data) === "processing"
+        ? 2000
+        : false,
   });
 };
 

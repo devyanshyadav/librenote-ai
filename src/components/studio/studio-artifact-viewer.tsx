@@ -5,6 +5,7 @@ import type {
   StudioArtifactItem,
   StudioArtifactViewMode,
 } from "@/types";
+import { getStudioArtifactStatus } from "@/lib/studio/studio-artifact-status";
 import { AudioOverviewViewer } from "./viewers/audio-overview-viewer";
 import { DataTableViewer } from "./viewers/data-table-viewer";
 import { FlashcardsViewer } from "./viewers/flashcards-viewer";
@@ -25,7 +26,9 @@ export function StudioArtifactViewer({
   notebookId?: string;
   mode?: StudioArtifactViewMode;
 }) {
-  if (artifact.status === "processing") {
+  const status = getStudioArtifactStatus(artifact);
+
+  if (status === "processing") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh]">
         <Icon
@@ -37,7 +40,21 @@ export function StudioArtifactViewer({
     );
   }
 
-  if (artifact.status === "failed" || !artifact.content) {
+  if (status === "timeout") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh]">
+        <Icon
+          icon="material-symbols:timer-off-outline-rounded"
+          className="size-6 text-destructive mb-4"
+        />
+        <p className="text-destructive text-sm">
+          Generation timed out. Delete and try again.
+        </p>
+      </div>
+    );
+  }
+
+  if (status === "failed" || !artifact.content) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh]">
         <Icon

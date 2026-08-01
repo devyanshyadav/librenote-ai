@@ -36,6 +36,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { copyArtifactShareUrl } from "@/lib/studio/artifact-share";
+import { getStudioArtifactStatus } from "@/lib/studio/studio-artifact-status";
 import { useStudioStore } from "@/stores/studio.store";
 import { useNotebookSources } from "@/tanstack/queries/source.query";
 import {
@@ -67,31 +68,34 @@ export function StudioPanel({ notebookId }: { notebookId: string }) {
   );
 
   const isPolling = artifacts.some(
-    (artifact: StudioArtifactListItemType) => artifact.status === "processing",
+    (artifact: StudioArtifactListItemType) =>
+      getStudioArtifactStatus(artifact) === "processing",
   );
 
   useEffect(() => {
     for (const artifact of artifacts as StudioArtifactListItemType[]) {
-      if (artifact.status === "processing") {
+      const status = getStudioArtifactStatus(artifact);
+
+      if (status === "processing") {
         processingIdsRef.current.add(artifact.id);
         continue;
       }
 
       if (
-        artifact.status === "completed" &&
+        (status === "completed" ||
+          status === "timeout" ||
+          status === "failed") &&
         processingIdsRef.current.has(artifact.id)
       ) {
         processingIdsRef.current.delete(artifact.id);
-        toast.success(`${artifact.title} is ready`);
-        continue;
-      }
 
-      if (
-        artifact.status === "failed" &&
-        processingIdsRef.current.has(artifact.id)
-      ) {
-        processingIdsRef.current.delete(artifact.id);
-        toast.error(`${artifact.title} failed to generate`);
+        if (status === "completed") {
+          toast.success(`${artifact.title} is ready`);
+        } else if (status === "timeout") {
+          toast.error(`${artifact.title} timed out`);
+        } else {
+          toast.error(`${artifact.title} failed to generate`);
+        }
       }
     }
   }, [artifacts]);

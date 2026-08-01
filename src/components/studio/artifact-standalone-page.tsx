@@ -6,6 +6,7 @@ import { ArtifactStandaloneShell } from "@/components/studio/artifact-standalone
 import { StudioArtifactViewer } from "@/components/studio/studio-artifact-viewer";
 import { ReportPrintView } from "@/components/studio/viewers/report-print-view";
 import { artifactUsesSources } from "@/lib/studio/artifact-share";
+import { getStudioArtifactStatus } from "@/lib/studio/studio-artifact-status";
 import { useNotebookSources } from "@/tanstack/queries/source.query";
 import { useStudioArtifact } from "@/tanstack/queries/studio.query";
 
@@ -55,8 +56,16 @@ function ArtifactStandalonePageContent({ artifactId }: { artifactId: string }) {
     );
   }
 
-  if (artifact.status === "processing") {
+  const status = artifact ? getStudioArtifactStatus(artifact) : null;
+
+  if (status === "processing") {
     return <ArtifactStatus message="This artifact is still generating…" />;
+  }
+
+  if (status === "timeout") {
+    return (
+      <ArtifactStatus message="This artifact timed out while generating." />
+    );
   }
 
   if (printMode) {

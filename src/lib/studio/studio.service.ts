@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import { db } from "@/db";
 import { type StudioArtifact, studioArtifacts } from "@/db/schema";
 import { generateStructuredOutput } from "@/lib/ai/generate-structured-output";
@@ -7,6 +7,7 @@ import { getArtifactConfig } from "@/lib/studio/artifact-registry";
 import { synthesizeAudioOverviewFile } from "@/lib/studio/audio-overview.service";
 import { normalizeNoteBodyForCreate } from "@/lib/studio/note-content.utils";
 import { getNotebookBrief } from "@/lib/studio/notebook-context.service";
+import { isStudioArtifactGenerationTimedOut } from "@/lib/studio/studio-artifact-status";
 import { StudioJourneyLog } from "@/lib/studio/studio-journey-log";
 import {
   summarizeFlashcardPromptForLog,
@@ -92,6 +93,30 @@ function toStudioArtifactItem(row: StudioArtifact): StudioArtifactItem {
   } as StudioArtifactItem;
 }
 
+async function persistArtifactTimeout(
+  artifact: StudioArtifact,
+): Promise<StudioArtifact> {
+  if (
+    artifact.status !== "processing" ||
+    !isStudioArtifactGenerationTimedOut(formatRowDate(artifact.createdAt))
+  ) {
+    return artifact;
+  }
+
+  const [timedOut] = await db
+    .update(studioArtifacts)
+    .set({ status: "timeout", updatedAt: new Date() })
+    .where(
+      and(
+        eq(studioArtifacts.id, artifact.id),
+        eq(studioArtifacts.status, "processing"),
+      ),
+    )
+    .returning();
+
+  return timedOut ?? { ...artifact, status: "timeout" };
+}
+
 function resolveArtifactTitle(
   fallbackTitle: string,
   content: StudioArtifactContent,
@@ -170,7 +195,11 @@ export async function listStudioArtifacts(
     .where(eq(studioArtifacts.notebookId, notebookId))
     .orderBy(desc(studioArtifacts.createdAt));
 
-  return rows.map(toStudioArtifactListItem);
+  const artifacts = await Promise.all(
+    rows.map((row) => persistArtifactTimeout(row as StudioArtifact)),
+  );
+
+  return artifacts.map(toStudioArtifactListItem);
 }
 
 export async function getStudioArtifactById(
@@ -189,7 +218,7 @@ export async function getStudioArtifactById(
 
   await assertNotebookOwner(artifact.notebookId, userId);
 
-  return toStudioArtifactItem(artifact);
+  return toStudioArtifactItem(await persistArtifactTimeout(artifact));
 }
 
 export async function deleteStudioArtifact(
@@ -342,6 +371,17 @@ export async function runStudioArtifactGeneration(
       prompt: userPrompt,
       tools: config.tools,
       stopWhen: config.stopWhen,
+      onAttemptFailed: ({ attempt, maxAttempts, error }) => {
+        log.step(
+          "artifact",
+          `Generation attempt ${attempt}/${maxAttempts} failed, retrying`,
+          {
+            artifactId: artifact.id,
+            type,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+      },
     });
 
     const { content, fileUrl } = await finalizeArtifactContent(

@@ -54,6 +54,7 @@ export const jobStatusEnum = pgEnum("job_status", [
   "processing",
   "completed",
   "failed",
+  "timeout",
 ]);
 
 // ==========================================

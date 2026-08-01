@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getStudioArtifactStatus } from "@/lib/studio/studio-artifact-status";
 import type { StudioArtifactListItem as StudioArtifactListItemType } from "@/types";
 import { Badge } from "../ui/badge";
 
@@ -44,9 +45,10 @@ export function StudioArtifactListItem({
 }) {
   const iconName = getStudioArtifactIcon(artifact.type);
   const typeLabel = formatStudioArtifactType(artifact.type);
-  const { status } = artifact;
+  const status = getStudioArtifactStatus(artifact);
   const isProcessing = status === "processing";
   const isFailed = status === "failed";
+  const isTimedOut = status === "timeout";
   const isCompleted = status === "completed";
 
   const [isRenameOpen, setIsRenameOpen] = useState(false);
@@ -54,9 +56,11 @@ export function StudioArtifactListItem({
 
   const subtitle = isProcessing
     ? `Generating ${typeLabel}...`
-    : isFailed
-      ? "Generation failed"
-      : typeLabel;
+    : isTimedOut
+      ? "Generation timed out"
+      : isFailed
+        ? "Generation failed"
+        : typeLabel;
 
   const handleRename = async (event: FormEvent) => {
     event.preventDefault();
@@ -98,7 +102,7 @@ export function StudioArtifactListItem({
             <p
               className={cn(
                 "truncate text-xs capitalize",
-                isFailed ? "text-destructive" : "text-muted-foreground",
+                isFailed || isTimedOut ? "text-destructive" : "text-muted-foreground",
               )}
             />
           </div>
@@ -110,7 +114,13 @@ export function StudioArtifactListItem({
         />
 
         <div className="relative flex shrink-0 items-center gap-2 pr-0.5 group-data-[collapsible=icon]:hidden">
-          <Badge variant={subtitle === "Generation failed" ? "destructive" : "secondary"}>{subtitle}</Badge>
+          <Badge
+            variant={
+              isFailed || isTimedOut ? "destructive" : "secondary"
+            }
+          >
+            {subtitle}
+          </Badge>
           {isProcessing ? (
             <Icon
               icon="svg-spinners:ring-resize"
