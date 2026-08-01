@@ -276,14 +276,14 @@ function MindMapGraph({
     return nodes.find((node) => node.id === selectedNodeId)?.data ?? null;
   }, [nodes, selectedNodeId]);
 
-  const legendSources = useMemo(() => {
-    const sourceIds = new Set(
-      content.nodes
-        .map((node) => node.data.sourceId)
-        .filter((sourceId): sourceId is string => Boolean(sourceId)),
-    );
-    return sources.filter((source) => sourceIds.has(source.id));
-  }, [content.nodes, sources]);
+  // const legendSources = useMemo(() => {
+  //   const sourceIds = new Set(
+  //     content.nodes
+  //       .map((node) => node.data.sourceId)
+  //       .filter((sourceId): sourceId is string => Boolean(sourceId)),
+  //   );
+  //   return sources.filter((source) => sourceIds.has(source.id));
+  // }, [content.nodes, sources]);
 
   const fitViewKey = useMemo(
     () =>
@@ -369,7 +369,7 @@ function MindMapGraph({
             />
           </ReactFlow>
 
-          <MindMapLegend sources={legendSources} />
+          {/* <MindMapLegend sources={legendSources} /> */}
 
           {selectedNode ? (
             <MindMapDetailPanel

@@ -171,87 +171,181 @@ export const STUDIO_ARTIFACT_SLUG_TO_TYPE: Record<
 };
 
 export const flashcardItemSchema = z.object({
-  front: z.string(),
-  back: z.string(),
-  hint: z.string().max(200).optional(),
-  topic: z.string().optional(),
-  sourceId: z.string().uuid().optional(),
-  difficulty: flashcardDifficultySchema.optional(),
+  front: z
+    .string()
+    .describe("Question, term, or prompt shown on the front of the card."),
+  back: z
+    .string()
+    .describe("Answer or explanation shown on the back of the card."),
+  hint: z
+    .string()
+    .max(200)
+    .optional()
+    .describe(
+      "Optional short nudge that helps recall without revealing the answer.",
+    ),
+  topic: z
+    .string()
+    .optional()
+    .describe("Optional short topic label grouping related cards."),
+  sourceId: z
+    .string()
+    .uuid()
+    .optional()
+    .describe(
+      "UUID of the source from the brief when the card is grounded in one source.",
+    ),
+  difficulty: flashcardDifficultySchema
+    .optional()
+    .describe("Optional difficulty: easy, medium, or hard."),
 });
 
 export const flashcardsContentSchema = z.object({
-  title: z.string(),
-  cards: z.array(flashcardItemSchema),
+  title: z
+    .string()
+    .describe(
+      "Descriptive deck title naming the notebook topic (not a generic label like 'Flashcards').",
+    ),
+  cards: z
+    .array(flashcardItemSchema)
+    .describe("Ordered list of study flashcards."),
 });
 
 export type FlashcardsContent = z.infer<typeof flashcardsContentSchema>;
 
 export const quizQuestionSchema = z.object({
-  question: z.string(),
-  options: z.array(z.string()).length(4),
-  correctIndex: z.number().int().min(0).max(3),
-  explanation: z.string(),
-  sourceId: z.string().uuid().optional(),
-  citationQuote: z.string().max(300).optional(),
+  question: z.string().describe("The multiple-choice question stem."),
+  options: z
+    .array(z.string())
+    .length(4)
+    .describe("Exactly four answer choices."),
+  correctIndex: z
+    .number()
+    .int()
+    .min(0)
+    .max(3)
+    .describe(
+      "Zero-based index of the correct option in the options array (0–3).",
+    ),
+  explanation: z
+    .string()
+    .describe("Brief explanation of why the correct answer is right."),
+  sourceId: z
+    .string()
+    .uuid()
+    .optional()
+    .describe(
+      "UUID of the source from the brief when the question is grounded in one source.",
+    ),
+  citationQuote: z
+    .string()
+    .max(300)
+    .optional()
+    .describe(
+      "Short verbatim excerpt (≤300 chars) from the source supporting the correct answer.",
+    ),
 });
 
 export const quizContentSchema = z.object({
-  title: z.string(),
-  questions: z.array(quizQuestionSchema),
+  title: z
+    .string()
+    .describe(
+      "Descriptive quiz title naming the notebook topic (not a generic label like 'Quiz').",
+    ),
+  questions: z.array(quizQuestionSchema).describe("Ordered quiz questions."),
 });
 
 export type QuizContent = z.infer<typeof quizContentSchema>;
 
 export const reportChartDataPointSchema = z.object({
-  label: z.string(),
-  value: z.number(),
+  label: z.string().describe("Category or axis label for this data point."),
+  value: z.number().describe("Numeric value for this data point."),
 });
 
 export type ReportChartDataPoint = z.infer<typeof reportChartDataPointSchema>;
 
 export const reportKeyTakeawayItemSchema = z.object({
-  title: z.string(),
-  detail: z.string(),
+  title: z.string().describe("Short headline for one key takeaway."),
+  detail: z
+    .string()
+    .describe("One or two sentences expanding on the takeaway."),
 });
 
 export type ReportKeyTakeawayItem = z.infer<typeof reportKeyTakeawayItemSchema>;
 
 export const reportBannerSchema = z.object({
-  alt: z.string(),
-  url: z.string().url(),
+  alt: z.string().describe("Short accessibility description of the banner image."),
+  url: z.string().url().describe("HTTPS URL of the banner image."),
 });
 
 export type ReportBanner = z.infer<typeof reportBannerSchema>;
 
 export const reportSectionSchema = z.discriminatedUnion("type", [
   z.object({
-    type: z.literal("key_takeaways"),
-    heading: z.string().default("Key takeaways"),
-    items: z.array(reportKeyTakeawayItemSchema),
+    type: z
+      .literal("key_takeaways")
+      .describe("Section type: bullet list of key conclusions."),
+    heading: z
+      .string()
+      .default("Key takeaways")
+      .describe("Section heading (defaults to 'Key takeaways')."),
+    items: z
+      .array(reportKeyTakeawayItemSchema)
+      .describe("Key takeaway items — use this section first in the report."),
   }),
   z.object({
-    type: z.literal("text_section"),
-    heading: z.string(),
-    content: z.string(),
+    type: z
+      .literal("text_section")
+      .describe("Section type: prose body section with a heading."),
+    heading: z.string().describe("Section heading."),
+    content: z
+      .string()
+      .describe("Section body in plain prose (no markdown headings)."),
   }),
   z.object({
-    type: z.literal("chart"),
-    chartTitle: z.string(),
-    chartId: z.string(),
-    description: z.string().optional(),
-    dataPoints: z.array(reportChartDataPointSchema),
+    type: z
+      .literal("chart")
+      .describe("Section type: inline chart with numeric data points."),
+    chartTitle: z.string().describe("Title displayed above the chart."),
+    chartId: z
+      .string()
+      .describe("Stable chart identifier (e.g. 'revenue-by-quarter')."),
+    description: z
+      .string()
+      .optional()
+      .describe("Optional caption or context for the chart."),
+    dataPoints: z
+      .array(reportChartDataPointSchema)
+      .describe("Chart data — each point has a label and numeric value."),
   }),
 ]);
 
 export type ReportSection = z.infer<typeof reportSectionSchema>;
 
 export const reportContentSchema = z.object({
-  title: z.string(),
-  subtitle: z.string().optional(),
-  summary: z.string(),
-  tags: z.array(z.string()),
-  banner: reportBannerSchema.nullish(),
-  sections: z.array(reportSectionSchema),
+  title: z
+    .string()
+    .describe(
+      "Report title naming the notebook topic (not a generic label like 'Report').",
+    ),
+  subtitle: z
+    .string()
+    .optional()
+    .describe("Optional subtitle clarifying scope or angle."),
+  summary: z
+    .string()
+    .describe("Executive summary paragraph synthesizing the full report."),
+  tags: z
+    .array(z.string())
+    .describe("Short topic tags for navigation (3–8 items)."),
+  banner: reportBannerSchema
+    .nullish()
+    .describe("Optional hero banner image — omit if no image is available."),
+  sections: z
+    .array(reportSectionSchema)
+    .describe(
+      "Ordered report sections. Start with key_takeaways, then text_section blocks.",
+    ),
 });
 
 export type ReportContent = z.infer<typeof reportContentSchema>;
@@ -281,11 +375,27 @@ export const dataTableBadgeToneSchema = z.enum([
 export type DataTableBadgeTone = z.infer<typeof dataTableBadgeToneSchema>;
 
 export const dataTableCellSchema = z.object({
-  value: z.string(),
-  format: dataTableCellFormatSchema.optional(),
-  badgeTone: dataTableBadgeToneSchema.optional(),
-  sourceId: z.string().uuid().optional(),
-  citationQuote: z.string().max(300).optional(),
+  value: z.string().describe("Cell display text."),
+  format: dataTableCellFormatSchema
+    .optional()
+    .describe(
+      'Cell format: "text" (plain), "markdown" (inline emphasis), or "badge" (status pill).',
+    ),
+  badgeTone: dataTableBadgeToneSchema
+    .optional()
+    .describe(
+      'Badge color when format is "badge": neutral, success, warning, danger, or info.',
+    ),
+  sourceId: z
+    .string()
+    .uuid()
+    .optional()
+    .describe("UUID of the source when this cell is grounded in one source."),
+  citationQuote: z
+    .string()
+    .max(300)
+    .optional()
+    .describe("Short supporting excerpt (≤300 chars) for this cell."),
 });
 
 export type DataTableCell = z.infer<typeof dataTableCellSchema>;
@@ -304,8 +414,12 @@ export const dataTableColumnKindSchema = z.enum([
 export type DataTableColumnKind = z.infer<typeof dataTableColumnKindSchema>;
 
 export const dataTableColumnSchema = z.object({
-  label: z.string(),
-  kind: dataTableColumnKindSchema.optional(),
+  label: z.string().describe("Column header label."),
+  kind: dataTableColumnKindSchema
+    .optional()
+    .describe(
+      "Optional column kind hint: text, name, status, date, number, metric, source, or detail.",
+    ),
 });
 
 export type DataTableColumn = z.infer<typeof dataTableColumnSchema>;
@@ -316,64 +430,148 @@ export const dataTableColumnDefSchema = z.union([
 ]);
 
 export const dataTableRowSchema = z.object({
-  cells: z.array(z.union([z.string(), dataTableCellSchema])),
-  sourceId: z.string().uuid().optional(),
-  rowLabel: z.string().optional(),
+  cells: z
+    .array(z.union([z.string(), dataTableCellSchema]))
+    .describe(
+      "One value per column, in column order. Use plain strings for simple text; use cell objects when format, badge, or sourceId is needed.",
+    ),
+  sourceId: z
+    .string()
+    .uuid()
+    .optional()
+    .describe("UUID of the primary source for the entire row."),
+  rowLabel: z
+    .string()
+    .optional()
+    .describe("Optional primary row title when it should stand apart from cells."),
 });
 
 export type DataTableRow = z.infer<typeof dataTableRowSchema>;
 
 export const dataTableContentSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  tableKind: dataTableKindSchema.optional(),
-  columns: z.array(dataTableColumnDefSchema).min(2),
-  rows: z.array(dataTableRowSchema).min(1),
+  title: z
+    .string()
+    .describe(
+      "Descriptive table title naming the notebook topic (not a generic label like 'Data Table').",
+    ),
+  description: z
+    .string()
+    .optional()
+    .describe("Optional one-sentence summary of what the table compares."),
+  tableKind: dataTableKindSchema
+    .optional()
+    .describe(
+      "Table layout: comparison, timeline, entities, metrics, or custom.",
+    ),
+  columns: z
+    .array(dataTableColumnDefSchema)
+    .min(2)
+    .describe(
+      "Column definitions — at least 2. Each entry is a label string or { label, kind? } object.",
+    ),
+  rows: z
+    .array(dataTableRowSchema)
+    .min(1)
+    .describe("Data rows — each row has a cells array matching column count."),
 });
 
 export type DataTableContent = z.infer<typeof dataTableContentSchema>;
 
 export const mindMapNodeSchema = z.object({
-  id: z.string(),
-  data: z.object({
-    label: z.string(),
-    summary: z.string(),
-    sourceId: z.string().uuid().optional(),
-  }),
+  id: z
+    .string()
+    .describe(
+      'Unique node id. Root must be exactly "root". Other ids: short slugs like "theme-1" or "detail-a".',
+    ),
+  data: z
+    .object({
+      label: z
+        .string()
+        .describe("Short display label (≤6 words) shown on the node."),
+      summary: z
+        .string()
+        .describe(
+          "1–2 sentence explanation shown in the detail panel when the node is selected.",
+        ),
+      sourceId: z
+        .string()
+        .uuid()
+        .optional()
+        .describe(
+          "UUID from the brief when this node is primarily grounded in one source.",
+        ),
+    })
+    .describe(
+      "Node payload — label and summary must be inside data, not at the top level.",
+    ),
 });
 
 export const mindMapEdgeSchema = z.object({
-  id: z.string(),
-  source: z.string(),
-  target: z.string(),
+  id: z
+    .string()
+    .describe('Unique edge id (e.g. "edge-root-theme-1").'),
+  source: z
+    .string()
+    .describe("Parent node id — the source of the tree edge."),
+  target: z
+    .string()
+    .describe("Child node id — must reference an existing node id."),
 });
 
 export const mindMapContentSchema = z.object({
-  title: z.string(),
-  nodes: z.array(mindMapNodeSchema).min(3).max(45),
-  edges: z.array(mindMapEdgeSchema),
+  title: z
+    .string()
+    .describe(
+      "Descriptive mind map title naming the notebook topic (not a generic label like 'Mind Map').",
+    ),
+  nodes: z
+    .array(mindMapNodeSchema)
+    .min(3)
+    .max(45)
+    .describe(
+      "All nodes in the map. Must include a root node with id \"root\".",
+    ),
+  edges: z
+    .array(mindMapEdgeSchema)
+    .describe(
+      "Tree edges connecting parent (source) to child (target). Every non-root node needs exactly one incoming edge.",
+    ),
 });
 
 export type MindMapContent = z.infer<typeof mindMapContentSchema>;
 
-export const audioOverviewSpeakerSchema = z.enum([
-  "narrator",
-  "host",
-  "cohost",
-]);
+export const audioOverviewSpeakerSchema = z
+  .enum(["narrator", "host", "cohost"])
+  .describe(
+    'Who speaks this line. Use "narrator" for single-voice overview scripts. Use "host" and "cohost" for podcast format — alternate between them across lines.',
+  );
 
 export type AudioOverviewSpeaker = z.infer<typeof audioOverviewSpeakerSchema>;
 
 export const audioOverviewLineSchema = z.object({
   speaker: audioOverviewSpeakerSchema,
-  text: z.string().min(1).max(1200),
+  text: z
+    .string()
+    .min(1)
+    .max(1200)
+    .describe(
+      "Spoken line text. Plain language only — no markdown, stage directions, speaker prefixes, or sound effects.",
+    ),
 });
 
 export type AudioOverviewLine = z.infer<typeof audioOverviewLineSchema>;
 
 export const audioOverviewHostsSchema = z.object({
-  host: z.string(),
-  cohost: z.string(),
+  host: z
+    .string()
+    .describe(
+      "Display name for the host presenter (required for podcast format).",
+    ),
+  cohost: z
+    .string()
+    .describe(
+      "Display name for the co-host presenter (required for podcast format).",
+    ),
 });
 
 export type AudioOverviewHosts = z.infer<typeof audioOverviewHostsSchema>;
@@ -410,20 +608,47 @@ export const audioOverviewPlaybackSchema = z.object({
 export type AudioOverviewPlayback = z.infer<typeof audioOverviewPlaybackSchema>;
 
 export const audioOverviewContentSchema = z.object({
-  title: z.string(),
-  description: z.string().optional(),
-  format: audioOverviewFormatSchema,
-  hosts: audioOverviewHostsSchema.optional(),
-  lines: z.array(audioOverviewLineSchema).min(2).max(12),
-  playback: audioOverviewPlaybackSchema.optional(),
+  title: z
+    .string()
+    .describe(
+      "Descriptive script title naming the notebook topic (not a generic label like 'Audio Overview').",
+    ),
+  description: z
+    .string()
+    .optional()
+    .describe("Optional one-sentence summary of what the audio covers."),
+  format: audioOverviewFormatSchema.describe(
+    'Audio format: "overview" (single narrator) or "podcast" (host + cohost dialogue). Set by the app — do not include in script generation output.',
+  ),
+  hosts: audioOverviewHostsSchema
+    .optional()
+    .describe(
+      "Presenter display names. Required for podcast format; omit for single-narrator overview.",
+    ),
+  lines: z
+    .array(audioOverviewLineSchema)
+    .min(2)
+    .max(12)
+    .describe(
+      'Ordered script lines (2–12). Each line has speaker and text. Overview: all lines use speaker "narrator". Podcast: alternate "host" and "cohost".',
+    ),
+  playback: audioOverviewPlaybackSchema
+    .optional()
+    .describe(
+      "Audio timing metadata — generated by the app after TTS. Do not include in script generation output.",
+    ),
 });
 
 export type AudioOverviewContent = z.infer<typeof audioOverviewContentSchema>;
 
-export const audioOverviewScriptSchema = audioOverviewContentSchema.omit({
-  format: true,
-  playback: true,
-});
+export const audioOverviewScriptSchema = audioOverviewContentSchema
+  .omit({
+    format: true,
+    playback: true,
+  })
+  .describe(
+    "Spoken audio script. Return only title, optional description, optional hosts (podcast), and lines. Do not include format or playback.",
+  );
 
 export type AudioOverviewScript = z.infer<typeof audioOverviewScriptSchema>;
 

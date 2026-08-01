@@ -25,10 +25,11 @@ export const MIND_MAP_DETAIL_LEVEL_OPTIONS: {
 ];
 
 const DETAIL_BY_LEVEL: Record<MindMapDetailLevel, string> = {
-  shallow: "High-level: root + 4–6 themes (~6–10 nodes, 2 levels).",
+  shallow:
+    "High-level: root + 4–6 distinct themes only (~6–10 nodes, 2 levels). No deeper nesting.",
   balanced:
-    "Balanced (~22–32 nodes): drill each theme through sub-themes to concrete details (4+ levels).",
-  deep: "Deep (~32–45 nodes): 2–4 children per parent, depth 4–5 with specific leaves.",
+    "Balanced (~18–28 nodes): drill each theme through sub-themes to concrete details (3–4 levels). Keep each parent to 2–4 children.",
+  deep: "Deep (~28–40 nodes): 2–4 children per parent, depth 4–5 with specific leaves. Never exceed 5 siblings on one parent.",
 };
 
 export function buildMindMapInstructionBlock(

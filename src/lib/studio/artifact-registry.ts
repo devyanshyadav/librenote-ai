@@ -32,8 +32,12 @@ import {
 const ARTIFACT_TITLE_RULE =
   "Include a concise, descriptive title that names the main topic from the notebook (never a generic label like 'Flashcards', 'Quiz', or 'Mind Map').";
 
+const SCHEMA_OUTPUT_RULE =
+  "Output must match the schema exactly — use only defined fields, correct types, and valid enum values. Do not add extra keys or nest fields differently than the schema specifies.";
+
 const AUDIO_NARRATOR_SYSTEM = `You write a spoken summary script from research notebook content.
 ${ARTIFACT_TITLE_RULE}
+${SCHEMA_OUTPUT_RULE}
 
 Write for listening: short sentences, smooth transitions, natural phrasing, and no markdown.
 Stay grounded in the notebook brief. Cover synthesis, major themes, and notable source details.
@@ -41,6 +45,7 @@ Include an opening, body, and close. Use 2–12 lines. Every line must use the s
 
 const AUDIO_PODCAST_SYSTEM = `You write a discussion script for two presenters (Host and Co-host) based on research notebook content.
 ${ARTIFACT_TITLE_RULE}
+${SCHEMA_OUTPUT_RULE}
 
 Write for listening: short sentences, natural flow, conversational tone, and no markdown.
 Make it feel spoken, not scripted — reactions, follow-up questions, and pushback are welcome.
@@ -88,6 +93,7 @@ function resolveArtifactTools(
 }
 
 const REPORT_SYSTEM = `You write detailed, well-structured research reports from notebook source material.
+${SCHEMA_OUTPUT_RULE}
 Aim for comprehensive coverage — include the major themes, supporting details, numbers, and nuance from the brief. Do not omit important material to keep the report short.
 Keep prose clean and readable: clear headings, logical flow, and focused paragraphs — not unstructured dumps.
 
@@ -113,10 +119,12 @@ const ARTIFACT_REGISTRY: Record<StudioGeneratedArtifactType, ArtifactConfig> = {
   flashcards: {
     title: "Flashcards",
     schema: flashcardsContentSchema,
-    schemaDescription: "Study deck with a descriptive title and flashcards",
+    schemaDescription:
+      "Study flashcard deck: title plus cards array. Each card has front, back, optional hint/topic/sourceId/difficulty.",
     system: (ctx) => {
       const base = `You create study flashcards from research notebook content.
 ${ARTIFACT_TITLE_RULE}
+${SCHEMA_OUTPUT_RULE}
 Each card should test one specific fact, concept, or relationship.
 Keep fronts concise questions or terms; backs should be clear answers with enough detail to study from.
 Each card must include a short hint: a helpful nudge that guides recall without revealing the answer.
@@ -146,10 +154,11 @@ Give each source proportional coverage — no source should be skipped or underr
     title: "Quiz",
     schema: quizContentSchema,
     schemaDescription:
-      "Quiz with a descriptive title and multiple-choice questions",
+      "Quiz: title plus questions array. Each question has question, exactly 4 options, correctIndex (0–3), explanation, optional sourceId/citationQuote.",
     system: (ctx) => {
       const base = `You create multiple-choice quiz questions from research notebook content.
 ${ARTIFACT_TITLE_RULE}
+${SCHEMA_OUTPUT_RULE}
 Each question must have exactly 4 options and one correctly correct answer.
 Include a short explanation for the correct answer.
 Set sourceId when a question is primarily grounded in one source from the brief.
@@ -178,7 +187,7 @@ Give each source proportional coverage — no source should be skipped or underr
     title: "Report",
     schema: reportContentSchema,
     schemaDescription:
-      "Comprehensive research report with metadata, takeaways, detailed text sections, and inline charts",
+      "Research report: title, summary, tags, optional banner, sections array. Sections use type key_takeaways, text_section, or chart.",
     system: (ctx) => {
       const instructions = buildReportInstructionBlock(ctx?.options);
 
@@ -203,10 +212,11 @@ Give each source proportional coverage — no source should be skipped or underr
     title: "Data Table",
     schema: dataTableContentSchema,
     schemaDescription:
-      "Structured comparison table with title, columns, source-linked rows",
+      "Data table: title, optional description/tableKind, columns (≥2), rows with cells matching column count. Cells may be strings or { value, format?, badgeTone?, sourceId? }.",
     system: (ctx) => {
       const base = `You extract structured tabular data from research notebook content.
 ${ARTIFACT_TITLE_RULE}
+${SCHEMA_OUTPUT_RULE}
 
 Table design:
 - Pick a tableKind: comparison (side-by-side entities), timeline (dates/events), entities (catalog of items), metrics (numbers/KPIs), or custom
@@ -243,16 +253,25 @@ Choose the best tableKind for the material and give each source proportional cov
     title: "Mind Map",
     schema: mindMapContentSchema,
     schemaDescription:
-      "Mind map: nodes with id and data (label, summary, sourceId?), edges with id, source, target",
+      'Mind map tree: title, nodes[{ id, data: { label, summary, sourceId? } }], edges[{ id, source, target }]. Root id must be "root".',
     system: (ctx) => {
       const base = `You create mind maps from research notebook content.
 ${ARTIFACT_TITLE_RULE}
+${SCHEMA_OUTPUT_RULE}
 Each node: { id, data: { label, summary, sourceId? } }. Each edge: { id, source, target }.
 Build one tree: edge source is the parent, target is the child. Root id "root".
-Drill down recursively (root → themes → sub-themes → details, 4+ levels).
+Drill down recursively (root → themes → sub-themes → details).
 Use source-specific labels — not generic titles like "Overview" or "Key Points".
-Every non-root node needs a short label and 1–2 sentence summary in data.summary.
-Set data.sourceId when a node is primarily from one source.`;
+Every non-root node needs a short label (≤6 words) and 1–2 sentence summary in data.summary.
+Set data.sourceId when a node is primarily from one source.
+
+Clarity and layout rules (critical):
+- Prioritize insight over exhaustiveness — each node should answer "so what?" for its branch.
+- Keep the map clean: merge related ideas instead of spawning redundant sibling nodes.
+- Limit fan-out: 2–4 children per parent; never put more than 5 siblings on one level.
+- Avoid clutter: no duplicate concepts, no overlapping branches, no filler nodes.
+- Balance depth across branches — do not let one limb balloon while others stay shallow.
+- Labels must be distinct at every level so branches are easy to scan at a glance.`;
       const instructions = buildMindMapInstructionBlock(ctx?.options);
 
       return instructions ? `${base}\n\n${instructions}` : base;
@@ -265,13 +284,14 @@ ${buildSourceIdList(brief)}
 
 Create a mind map from all selected sources.
 Root id must be "root". Every non-root node needs exactly one edge from its parent.
-Set data.sourceId on nodes grounded in a single source.`,
+Set data.sourceId on nodes grounded in a single source.
+Keep the structure clean and scannable: insightful labels, balanced branching, no redundant or overlapping branches.`,
   },
   audio_overview: {
     title: "Audio Overview",
     schema: audioOverviewScriptSchema,
     schemaDescription:
-      "Spoken script with a single narrator or alternating presenters",
+      'Audio script: title, optional description, optional hosts (podcast), lines[{ speaker: "narrator"|"host"|"cohost", text }]. No format or playback fields.',
     system: (ctx) => {
       const isPodcast = ctx?.options?.audioOverviewFormat === "podcast";
       const base = isPodcast ? AUDIO_PODCAST_SYSTEM : AUDIO_NARRATOR_SYSTEM;
@@ -282,8 +302,8 @@ Set data.sourceId on nodes grounded in a single source.`,
     buildUserPrompt: (brief, ctx) => {
       const isPodcast = ctx?.options?.audioOverviewFormat === "podcast";
       const formatRules = isPodcast
-        ? "Alternate host and cohost speakers, name both presenters, and keep the exchange conversational."
-        : 'Use speaker "narrator" on every line.';
+        ? 'Return hosts { host, cohost } with display names. Alternate speaker "host" and "cohost" on every line. Do not include format or playback.'
+        : 'Use speaker "narrator" on every line. Omit hosts. Do not include format or playback.';
 
       return `${buildBriefContext(brief)}
 

@@ -4,9 +4,10 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  // Quieter terminal in `bun dev` (fetch + request logs).
   logging: false,
-  // Strip client console noise from production bundles (`bun run build` / `bun start`).
+  experimental: {
+    proxyClientMaxBodySize: "50mb",
+  },
   compiler: isProduction
     ? {
         removeConsole: {
