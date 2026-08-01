@@ -1,4 +1,5 @@
 import { tool, type UIMessageStreamWriter } from "ai";
+import { buildModelImageFiles } from "@/lib/chunks/inline-image-for-model";
 import { searchDocumentChunks } from "@/lib/chunks/rag-search.service";
 import { RagSearchLog } from "@/lib/chunks/rag-search-log";
 import type {
@@ -62,23 +63,30 @@ function formatChunksForModel({
     .join("\n\n");
 }
 
-function buildSearchContextModelOutput(output: SearchContextToolResult) {
-  const text = `${output.preamble}\n\n${output.context}`;
+function collectFigureImageUrls(chunks: RetrievedChunk[]): string[] {
+  return [
+    ...new Set(
+      chunks.flatMap((chunk) =>
+        chunk.metadata?.kind === "figure" && chunk.metadata.imageUrl
+          ? [chunk.metadata.imageUrl]
+          : [],
+      ),
+    ),
+  ];
+}
 
-  if (output.figureImageUrls.length === 0) {
+async function buildSearchContextModelOutput(output: SearchContextToolResult) {
+  const text = `${output.preamble}\n\n${output.context}`;
+  const files = await buildModelImageFiles(output.figureImageUrls);
+
+  if (files.length === 0) {
     return { type: "text" as const, value: text };
   }
 
-  const content = [
-    { type: "text" as const, text },
-    ...output.figureImageUrls.map((imageUrl) => ({
-      type: "file" as const,
-      mediaType: "image" as const,
-      data: { type: "url" as const, url: new URL(imageUrl) },
-    })),
-  ];
-
-  return { type: "content" as const, value: content };
+  return {
+    type: "content" as const,
+    value: [{ type: "text" as const, text }, ...files],
+  };
 }
 
 export function createSearchContextTool({
@@ -143,16 +151,12 @@ export function createSearchContextTool({
           chunks: similarChunks,
           retrievedChunks,
         }),
-        figureImageUrls: similarChunks.flatMap((chunk) =>
-          chunk.metadata?.kind === "figure" && chunk.metadata.imageUrl
-            ? [chunk.metadata.imageUrl]
-            : [],
-        ),
+        figureImageUrls: collectFigureImageUrls(similarChunks),
       };
     },
-    toModelOutput: ({ output }) =>
+    toModelOutput: async ({ output }) =>
       typeof output === "string"
         ? { type: "text", value: output }
-        : buildSearchContextModelOutput(output),
+        : await buildSearchContextModelOutput(output),
   });
 }

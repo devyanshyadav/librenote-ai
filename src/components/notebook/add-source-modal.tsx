@@ -376,7 +376,7 @@ export function AddSourceModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="sm:min-w-2xl rounded-4xl p-2 bg-card gap-0"
+        className="sm:min-w-2xl rounded-4xl p-2 bg-card gap-0 flex max-h-[calc(100vh-2rem)] flex-col overflow-hidden"
       >
         {view === "main" && (
           <>
@@ -571,7 +571,7 @@ export function AddSourceModal({
 
         {view === "paste-text" && (
           <>
-            <DialogHeader className="gap-1 p-3">
+            <DialogHeader className="shrink-0 gap-1 p-3">
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -590,7 +590,7 @@ export function AddSourceModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 p-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
               <div className="space-y-1">
                 <Label htmlFor="text-title">Title (Optional)</Label>
                 <Input
@@ -602,12 +602,12 @@ export function AddSourceModal({
                 />
               </div>
 
-              <div className="space-y-1">
+              <div className="flex min-h-0 flex-1 flex-col space-y-1">
                 <Label htmlFor="text-content">Content</Label>
                 <Textarea
                   id="text-content"
                   placeholder="Paste your source text here..."
-                  className="min-h-56"
+                  className="min-h-56 max-h-[min(24rem,50vh)] resize-none overflow-y-auto [field-sizing:fixed]"
                   value={pastedText}
                   onChange={(e) => setPastedText(e.target.value)}
                   disabled={isBusy}
@@ -615,7 +615,7 @@ export function AddSourceModal({
               </div>
             </div>
 
-            <DialogFooter className="bg-transparent p-4 border-0">
+            <DialogFooter className="shrink-0 bg-transparent p-4 border-0">
               <Button
                 variant="outline"
                 onClick={() => setView("main")}
@@ -642,7 +642,7 @@ export function AddSourceModal({
 
         {view === "bulk-import" && (
           <>
-            <DialogHeader className="gap-1 p-3">
+            <DialogHeader className="shrink-0 gap-1 p-3">
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -661,13 +661,13 @@ export function AddSourceModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 p-4">
-              <div className="space-y-1">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
+              <div className="flex min-h-0 flex-1 flex-col space-y-1">
                 <Label htmlFor="urls-content">URLs</Label>
                 <Textarea
                   id="urls-content"
                   placeholder="https://example.com&#10;https://youtube.com/watch?v=..."
-                  className="min-h-56 font-mono text-sm"
+                  className="min-h-56 max-h-[min(24rem,50vh)] resize-none overflow-y-auto font-mono text-sm [field-sizing:fixed]"
                   value={bulkUrls}
                   onChange={(e) => setBulkUrls(e.target.value)}
                   disabled={isBusy}
@@ -681,7 +681,7 @@ export function AddSourceModal({
               )}
             </div>
 
-            <DialogFooter className="bg-transparent p-4 border-0">
+            <DialogFooter className="shrink-0 bg-transparent p-4 border-0">
               <Button
                 variant="outline"
                 onClick={() => setView("main")}
@@ -712,7 +712,7 @@ export function AddSourceModal({
 
         {view === "import-audio" && (
           <>
-            <DialogHeader className="gap-1 p-3">
+            <DialogHeader className="shrink-0 gap-1 p-3">
               <div className="flex items-center gap-2">
                 <Button
                   type="button"
@@ -731,7 +731,7 @@ export function AddSourceModal({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4 p-4">
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4">
               <div className="space-y-1">
                 <Label htmlFor="audio-title">Title (Optional)</Label>
                 <Input
@@ -759,7 +759,7 @@ export function AddSourceModal({
                 onDrop={handleAudioDrop}
                 onClick={() => audioInputRef.current?.click()}
                 className={cn(
-                  "border border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors min-h-48",
+                  "border-2 border-dashed bg-linear-to-br from-background/50 via-muted/30 to-background/50 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors min-h-48",
                   isAudioDragging
                     ? "border-primary bg-primary/5"
                     : "border-border hover:bg-muted/30",
@@ -787,7 +787,7 @@ export function AddSourceModal({
               />
             </div>
 
-            <DialogFooter className="bg-transparent p-4 border-0">
+            <DialogFooter className="shrink-0 bg-transparent p-4 border-0">
               <Button
                 variant="outline"
                 onClick={() => setView("main")}
