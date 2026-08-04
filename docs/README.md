@@ -184,7 +184,7 @@ bun dev
 
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 16 (App Router) |
+| Framework | Next.js 16.3 (App Router) |
 | Auth & storage | Supabase |
 | Database | PostgreSQL + pgvector |
 | ORM | Drizzle |
