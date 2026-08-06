@@ -4,6 +4,8 @@ Technical reference for installing, configuring, and running LibreNote AI.
 
 **New here?** Start with the [project README](../README.md) for a plain-language overview.
 
+**Building or writing about the project?** See the [architectural case study](./CASE_STUDY.md).
+
 ---
 
 ## Table of contents

@@ -20,6 +20,7 @@
 
 <p align="center">
   <strong>Technical setup, commands, and deployment</strong> → <a href="docs/README.md">Documentation</a>
+  · <a href="docs/CASE_STUDY.md">Case study</a>
 </p>
 
 ---
