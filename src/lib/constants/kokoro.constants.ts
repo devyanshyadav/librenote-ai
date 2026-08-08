@@ -4,7 +4,7 @@ export const KOKORO_AUDIO_LANGUAGES = [
     value: "en-us",
     label: "English (US)",
     scriptLabel: "American English",
-    voices: { female: "af_heart", male: "am_fenrir" },
+    voices: { female: "af_aoede", male: "am_liam" },
   },
   {
     value: "en-gb",

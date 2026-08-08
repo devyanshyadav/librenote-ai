@@ -518,6 +518,23 @@ Quick reference for the main constants:
 
 ## 14. Tradeoffs & lessons
 
+### Challenges I faced (Optimizing Podcast Studio Latency)
+
+While implementing the **Podcast Studio** audio overview generator, the primary bottleneck was the Text-to-Speech (TTS) API latency. If a script has 10 dialogue exchanges between the host and co-host, a naive approach makes 10 separate TTS requests and plays them in order—but this causes huge network delays and a sluggish user experience.
+
+To solve this, I designed a **Batching Optimization Strategy** to make only two parallel TTS requests:
+* **Audio Slicing:** Instead of requesting line-by-line, the Host's lines are concatenated together, and the Co-Host's lines are concatenated together, making only two parallel API calls. Once the two tracks return, the code automatically cuts the long audio clips back into individual dialogue lines based on text length.
+* **Stitching:** It arranges these sliced audio lines back into the correct chronological conversational order, inserting a small 400ms pause when the speaker changes to make it sound natural.
+* **Exporting:** It saves the final stitched audio as a standard WAV file.
+
+This reduces the API call overhead by up to 90%, resulting in a highly stable and fast podcast generation.
+
+<p align="center">
+  <img src="../public/md-architectures/img12.png" alt="Podcast Studio Batching & Audio Assembly Pipeline" style="max-height: 500px; max-width: 100%; width: auto; height: auto;" />
+</p>
+
+
+
 ### What worked well
 
 - **One Postgres database** for everything (no separate vector DB)
