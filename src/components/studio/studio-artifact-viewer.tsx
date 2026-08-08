@@ -13,6 +13,7 @@ import { MindMapViewer } from "./viewers/mind-map-viewer";
 import { NoteViewer } from "./viewers/note-viewer";
 import { QuizViewer } from "./viewers/quiz-viewer";
 import { ReportViewer } from "./viewers/report-viewer";
+import { VisualFlowViewer } from "./viewers/visual-flow-viewer";
 import { Icon } from "@iconify/react";
 
 export function StudioArtifactViewer({
@@ -102,6 +103,14 @@ export function StudioArtifactViewer({
     case "mind_map":
       return (
         <MindMapViewer
+          content={artifact.content}
+          sources={sources}
+          mode={mode}
+        />
+      );
+    case "visual_flow":
+      return (
+        <VisualFlowViewer
           content={artifact.content}
           sources={sources}
           mode={mode}

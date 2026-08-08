@@ -38,6 +38,12 @@ export const STUDIO_FEATURES: {
     className: "size-6",
   },
   {
+    slug: "visual-flow",
+    label: "Flowcharts",
+    icon: "material-symbols:flowsheet-outline-rounded",
+    className: "size-6",
+  },
+  {
     slug: "audio-overview",
     label: "Audio Overview",
     icon: "hugeicons:ai-audio",

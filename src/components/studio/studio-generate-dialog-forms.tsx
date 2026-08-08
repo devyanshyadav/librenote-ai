@@ -7,6 +7,7 @@ import { FlashcardsGenerateForm } from "@/components/studio/flashcards-generate-
 import { MindMapGenerateForm } from "@/components/studio/mind-map-generate-form";
 import { QuizGenerateForm } from "@/components/studio/quiz-generate-form";
 import { ReportGenerateForm } from "@/components/studio/report-generate-form";
+import { VisualFlowGenerateForm } from "@/components/studio/visual-flow-generate-form";
 import type {
   StudioGenerateFormComponent,
   StudioGenerateFormEntry,
@@ -91,6 +92,7 @@ function useInstructionFields() {
   };
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Count limited template factories
 function useMaxCountState(max: number) {
   const [value, setValue] = useState("");
 
@@ -252,6 +254,7 @@ function MaxCountField({
   );
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Count limited template factories
 function createCountLimitedForm(config: {
   max: number;
   countLabel: string;
@@ -313,6 +316,7 @@ function createCountLimitedForm(config: {
   );
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: Detail level template factories
 function createDetailLevelForm(config: {
   ids: {
     focusTopic: string;
@@ -392,6 +396,11 @@ export const STUDIO_GENERATE_FORMS: Record<
     title: "Mind Map",
     description: "Choose how deep the map goes and what it should focus on.",
     Form: MindMapGenerateForm,
+  },
+  "visual-flow": {
+    title: "Flowcharts & Diagrams",
+    description: "Choose your diagram structure type (Flowchart, Sequence, State, Gantt) and what concept workflow to model.",
+    Form: VisualFlowGenerateForm,
   },
   "audio-overview": {
     title: "Audio Overview",
