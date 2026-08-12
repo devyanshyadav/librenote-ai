@@ -1,7 +1,5 @@
-import { type StopCondition, type ToolSet } from "ai";
-// import { stepCountIs } from "ai";
-import { getDiagramExampleTool } from "@/lib/studio/visual-flow-options";
-import { DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE } from "@/lib/studio/visual-flow.constants";
+import { isStepCount, type StopCondition, type ToolSet } from "ai";
+import type z from "zod";
 import { buildAudioOverviewInstructionBlock } from "@/lib/studio/audio-overview-options";
 import { buildDataTableInstructionBlock } from "@/lib/studio/data-table-options";
 import { buildFlashcardInstructionBlock } from "@/lib/studio/flashcard-options";
@@ -12,6 +10,9 @@ import {
 } from "@/lib/studio/notebook-brief-context";
 import { buildQuizInstructionBlock } from "@/lib/studio/quiz-options";
 import { buildReportInstructionBlock } from "@/lib/studio/report-options";
+import { DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE } from "@/lib/studio/visual-flow.constants";
+// import { stepCountIs } from "ai";
+import { getDiagramExampleTool } from "@/lib/studio/visual-flow-options";
 // import {
 //   createStudioTools,
 //   pickStudioTools,
@@ -24,11 +25,10 @@ import {
   type NotebookBrief,
   quizContentSchema,
   reportContentSchema,
-  visualFlowContentSchema,
   type StudioArtifactContext,
   type StudioGeneratedArtifactType,
+  visualFlowContentSchema,
 } from "@/types";
-import z from "zod";
 
 // const REPORT_MAX_STEPS = 20;
 
@@ -358,6 +358,7 @@ Strictly adhere to the banned character rules (no raw [ ] or ·), line break con
     tools: {
       getDiagramExample: getDiagramExampleTool,
     },
+    stopWhen: isStepCount(6),
   },
 };
 

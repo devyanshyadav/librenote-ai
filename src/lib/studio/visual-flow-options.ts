@@ -12,50 +12,90 @@ export const getDiagramExampleTool = tool({
   }),
   execute: async ({ diagramType }) => {
     const knowledge: Record<string, { rules: string; examples: string[] }> = {
-      // ───────────────────────────────────────────────
+     // ───────────────────────────────────────────────
       // FLOWCHART
       // ───────────────────────────────────────────────
       flowchart: {
-        rules: `DECLARATION: flowchart TD|LR|BT|RL (or graph)
-NODE SHAPES: A[rect] A(round) A([stadium]) A[[sub]] A[(cyl)] A((circle)) A{diamond} A{{hex}} A>asym] A[/para/]
-LINKS: --> --- -.-> ==> --o --x <-->  + |label|
-SUBGRAPH: subgraph id [Title] ... end
-STYLE: style A fill:#f9f  classDef ...  class A myClass
-GOTCHA: never use lowercase "end" as node id/label.`,
+        rules: `DECLARATION
+  flowchart TD      (Top-Down)
+  flowchart LR      (Left-Right)
+  (Other directions: BT, RL, TB)
+
+NODE SHAPES
+  Box: id["Text"]
+  Rounded: id("Text")
+  Stadium: id(["Text"])
+  Subroutine: id[["Text"]]
+  Database/Cyl: id[("Text")]
+  Circle: id(("Text"))
+  Asymmetric: id>"Text"]
+  Rhombus/Decision: id{"Text"}
+  Hexagon: id{{"Text"}}
+  Parallelogram: id[/"Text"/]
+  Trapezoid: id[\\"Text"/]
+
+EDGES & CONNECTIONS
+  Normal: A --> B
+  Thick: A ==> B
+  Dotted: A -.-> B
+  Open link: A --- B
+  With Label: A -- "Label Text" --> B   (or A -->|"Label Text"| B)
+  Bidirectional: A <--> B
+
+SUBGRAPHS
+  subgraph id ["Display Title"]
+      A --> B
+  end
+
+GOTCHAS & CRITICAL RULES (AVOID FATAL ERRORS)
+  - RESERVED KEYWORD 'end': NEVER use the exact lowercase word \`end\` as a node ID or label without quotes. It will crash the parser because it is used to terminate subgraphs. If you need it, capitalize it (\`End\`) or quote it (\`id["end"]\`).
+  - QUOTING SPECIAL CHARACTERS (CRITICAL): If your node text contains parentheses \`()\`, commas \`,\`, brackets \`[]\`, or colons \`:\`, you MUST wrap the text in double quotes inside the shape marker. Example: \`A["User (Client)"]\`. Writing \`A[User (Client)]\` will cause a fatal parse error.
+  - NO SPACES IN IDs: Node IDs must be strictly alphanumeric without spaces (e.g., \`NodeA["Text"]\`, NOT \`Node A["Text"]\`).
+  - SUBGRAPH SYNTAX: Always use \`subgraph ID ["Display Title"]\` and always terminate the block with \`end\` on its own line.`,
+
         examples: [
           `flowchart TD
-    Start([Start]) --> Input[/User Input/]
-    Input --> Validate{Valid?}
-    Validate -->|Yes| Process[Process Data]
-    Validate -->|No| Error[Show Error]
+    Start([Start]) --> Input[/"Enter Email"/]
+    Input --> Validate{"Is Valid?"}
+    Validate -- "Yes" --> DB[("Database")]
+    Validate -- "No" --> Error["Show Error Message"]
     Error --> Input
-    Process --> DB[(Database)]
     DB --> End([End])`,
+
           `flowchart LR
-    A[Client] -->|HTTPS| B[API Gateway]
-    B --> C{Auth?}
-    C -->|OK| D[Service]
-    C -->|Fail| E[401]
-    D --> F[(DB)]`,
+    Client["Client (Browser)"] -- "HTTPS" --> Gateway["API Gateway"]
+    Gateway --> Auth{"Authenticated?"}
+    Auth -- "Yes" --> Service["Microservice"]
+    Auth -- "No" --> Reject["401 Unauthorized"]
+    Service <--> Cache[("Redis Cache")]`,
+
           `flowchart TB
-    subgraph Frontend
-        UI[React UI]
+    subgraph Frontend ["React Application"]
+        UI["User Interface"]
+        State["Redux Store"]
     end
-    subgraph Backend
-        API[Node API]
+    subgraph Backend ["Node.js API"]
+        Router["Express Router"]
+        Controllers["Business Logic"]
     end
-    UI --> API
-    API --> DB[(Postgres)]`,
-          `flowchart TD
-    A[Start] --> B{Condition}
-    B -->|Yes| C[Action]
-    B -->|No| D[Other]
-    C --> E([End])
-    D --> E`,
+    UI --> State
+    State -- "API Call" --> Router
+    Router --> Controllers`,
+
           `flowchart LR
-    A@{ shape: stadium, label: "Begin" } --> B@{ shape: diam, label: "Decision" }
-    B -->|Yes| C@{ shape: rect, label: "Work" }
-    C --> D@{ shape: stadium, label: "Done" }`,
+    A["System A (Legacy)"] -.->|"Async Sync"| B["System B (New)"]
+    B ==> C{{"Kafka Topic"}}
+    C ==> D[["Worker Process"]]
+    D --> E[("PostgreSQL")]`,
+
+          `flowchart TD
+    subgraph Checkout ["Checkout Process"]
+        Cart["View Cart"] --> Payment{"Payment Method"}
+        Payment -- "Credit Card" --> Stripe["Stripe API"]
+        Payment -- "PayPal" --> PP["PayPal API"]
+    end
+    Stripe --> Success(["Order Complete"])
+    PP --> Success`
         ],
       },
 

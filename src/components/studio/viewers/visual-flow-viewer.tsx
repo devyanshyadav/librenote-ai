@@ -18,7 +18,7 @@ import { ClipboardButton } from "@/components/notebook/chat/clipboard-button";
 
 class DiagramDebouncer {
   private timeoutId: NodeJS.Timeout | null = null;
-  constructor(private delay: number) { }
+  constructor(private delay: number) {}
 
   debounce(fn: () => void): void {
     if (this.timeoutId) {
@@ -100,6 +100,7 @@ export function VisualFlowViewer({ content }: { content: VisualFlowContent }) {
         startOnLoad: false,
         theme: mermaidTheme,
         securityLevel: "strict",
+        suppressErrorRendering: true,
       });
 
       const errorContainers = document.querySelectorAll(
