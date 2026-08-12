@@ -1,6 +1,6 @@
 import { type StopCondition, type ToolSet } from "ai";
 // import { stepCountIs } from "ai";
-import type { z } from "zod";
+import { getDiagramExampleTool } from "@/lib/studio/visual-flow-options";
 import { buildAudioOverviewInstructionBlock } from "@/lib/studio/audio-overview-options";
 import { buildDataTableInstructionBlock } from "@/lib/studio/data-table-options";
 import { buildFlashcardInstructionBlock } from "@/lib/studio/flashcard-options";
@@ -27,6 +27,7 @@ import {
   type StudioArtifactContext,
   type StudioGeneratedArtifactType,
 } from "@/types";
+import z from "zod";
 
 // const REPORT_MAX_STEPS = 20;
 
@@ -319,69 +320,41 @@ Create the script for ${brief.sources.length} source(s) and give each source pro
     title: "Diagrams & Visual Models",
     schema: visualFlowContentSchema,
     schemaDescription:
-      "Universal Mermaid diagram mapping: title, description, diagramType (flowchart, sequence, class, er, c4, architecture, packet, zenuml, state, journey, git, requirement, kanban, eventmodeling, gantt, timeline, pie, xychart, mindmap, sankey, quadrant, block, radar, treemap, venn, ishikawa), code (Mermaid syntax).",
-    system: () => {
-      return `You create clean, accurate, and 100% syntactically valid Mermaid.js diagrams.
+      "Universal Mermaid diagram mapping: title, description, diagramType (flowchart, sequence, class, er, c4, packet, state, journey, git, requirement, kanban, eventmodeling, gantt, timeline, pie, xychart, mindmap, sankey, quadrant, radar, treemap, venn, ishikawa), code (Mermaid syntax).",
+    system: (ctx) => {
+      const selectedType = ctx?.options?.visualFlowDiagramType || "flowchart";
+      return `You are a helpful assistant.
+
+CRITICAL RULES:
+1. DIAGRAM QUERIES & SYNTAX RULES: You MUST generate a diagram of type "${selectedType}". First, call the 'getDiagramExample' tool with diagramType: "${selectedType}" to retrieve the syntax rules and multiple valid examples. Study the returned rules and different patterns carefully, and generate a customized, original diagram matching the user's specific request. Do not copy any example verbatim.
+2. STRICT JSON FORMAT: You MUST generate a valid JSON object matching the requested output schema. Do not output any conversational introductions, greetings, markdown blocks (like \`\`\`json), or post-explanations. Your output must start with "{" and end with "}". Keep the JSON raw and clean.
+
 Ensure the diagram content is highly accurate, insightful, and clean. The layout must be simple, meaningful, and uncluttered.
 ${ARTIFACT_TITLE_RULE}
-${SCHEMA_OUTPUT_RULE}
 
 ### ABSOLUTE MERMAID SYNTAX LAWS:
-1. Valid Header: Start with the correct header matching the requested diagramType (e.g., 'flowchart TD', 'sequenceDiagram', 'classDiagram', 'venn-beta', etc.). Never use 'graph TD' for flowcharts.
+1. Valid Header: Start with the correct header matching the requested diagramType (e.g., 'flowchart TD', 'sequenceDiagram', 'classDiagram', etc.). Never use 'graph TD' for flowcharts.
 2. Quoted Labels: Wrap node/actor labels and message strings in double quotes: ID["Label Here"]. Use simple alphanumeric IDs only (no spaces, dashes, or slashes in IDs).
-3. Line Breaks:
-   - Standard diagrams (flowcharts, sequence, state, class) use '<br/>' for line breaks. Never use actual raw newlines inside label strings.
-   - For 'venn-beta' diagrams, keep labels on a SINGLE line (do NOT use '<br/>').
+3. Line Breaks: Use '<br/>' for line breaks inside label strings. Never use actual raw newlines inside label strings.
 4. Banned Characters:
    - Raw square brackets [ ] are BANNED inside node labels (replace with round brackets () or single quotes).
    - Middle-dot · and non-ASCII math symbols (×, ÷, ≤, ≥, etc.) are BANNED inside labels. Use ASCII equivalent operators (*, /, <=, >=).
-5. Connector Syntax: Write connections cleanly line-by-line (e.g., A --> B). Do not group links (no 'A & B --> C').
-
-### SCHEMA-STRICT SPECIFICATION: VENN DIAGRAMS (venn-beta)
-When generating 'venn-beta' diagrams, your Mermaid output MUST strictly reflect the structure defined by this Zod Schema AST:
-
-\`\`\`typescript
-const VennDiagramSchema = z.object({
-  type: z.literal("venn-beta"),
-  sets: z.array(z.object({
-    id: z.string().regex(/^[a-zA-Z0-9]+$/), // Strict alphanumeric ID
-    label: z.string()                      // Display name
-  })),
-  unions: z.array(z.object({
-    sets: z.array(z.string()),             // e.g. ["SetA", "SetB"]
-    label: z.string()                      // Single-line string, NO <br/>
-  }))
-});
-\`\`\`
-
-#### Mapping Schema AST to Mermaid Code:
-1. Header: Always 'venn-beta'.
-2. Sets: Each element in 'sets' maps to: set SetID ["Display Label"]
-3. Unions: Each element in 'unions' maps to: union SetA,SetB ["Union Label"]
-   - ALWAYS use the keyword 'union' (NEVER use 'intersection').
-   - Joined set IDs MUST NOT contain spaces (e.g., 'union SetA,SetB' NOT 'union SetA, SetB').
-   - For 3-set intersections, list all three IDs: 'union SetA,SetB,SetC ["Label"]'.
-
-#### Example Compliant Output:
-venn-beta
-    set SetA ["Transformer Architecture"]
-    set SetB ["BERT Models"]
-    set SetC ["Pre-Mortem Systems"]
-
-    union SetA,SetB ["Self-Attention & Residual Connections"]
-    union SetB,SetC ["Bidirectional Context & Hindsight"]
-    union SetA,SetC ["Reliability Architecture"]
-    union SetA,SetB,SetC ["Modern NLP & Cognitive Systems"]`;
+5. Connector Syntax: Write connections cleanly line-by-line (e.g., A --> B). Do not group links (no 'A & B --> C').`;
     },
-    buildUserPrompt: (brief) =>
-      `${buildBriefContext(brief)}
+    buildUserPrompt: (brief, ctx) => {
+      const selectedType = ctx?.options?.visualFlowDiagramType || "flowchart";
+      return `${buildBriefContext(brief)}
 
 Available source ids:
 ${buildSourceIdList(brief)}
 
 Generate a valid, fully compileable Mermaid diagram based on the brief above.
-Select the diagram type that best captures the concept structure.
-Strictly adhere to the banned character rules (no raw [ ] or ·), line break constraints, double-quoting, and diagram-specific AST schemas (especially VennDiagramSchema) to ensure a flawless render.`,
+IMPORTANT: You MUST generate a diagram of type "${selectedType}". Set the "diagramType" property in the output JSON to exactly "${selectedType}" and generate the corresponding code.
+Strictly adhere to the banned character rules (no raw [ ] or ·), line break constraints, and double-quoting to ensure a flawless render.`;
+    },
+    tools: {
+      getDiagramExample: getDiagramExampleTool,
+    },
   },
 };
 

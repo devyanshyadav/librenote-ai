@@ -7,6 +7,7 @@ import {
   type StopCondition,
   type ToolSet,
   wrapLanguageModel,
+  isStepCount,
 } from "ai";
 import type { z } from "zod";
 import { repairJsonTextValue } from "@/lib/ai/json-repair";
@@ -50,6 +51,9 @@ async function generateStructuredOutputAttempt<OBJECT>(
   output: OBJECT;
   toolResults: { toolName: string; output: unknown }[];
 }> {
+  console.log(`[Structured Output] Starting generation for schemaName: "${options.schemaName || 'unknown'}"`);
+  console.log(`[Structured Output] Available tools:`, options.tools ? Object.keys(options.tools) : 'None');
+
   const result = await generateText({
     model: getStructuredOutputModel(),
     output: Output.object({
@@ -61,8 +65,11 @@ async function generateStructuredOutputAttempt<OBJECT>(
     prompt: options.prompt,
     maxRetries: API_MAX_RETRIES,
     tools: options.tools,
-    stopWhen: options.stopWhen,
+    stopWhen: options.stopWhen || isStepCount(5),
   });
+
+  console.log(`[Structured Output] finished generateText. Steps executed: ${result.steps.length}`);
+  console.log(`[Structured Output] Tool results from steps:`, result.toolResults);
 
   if (result.output == null) {
     throw new Error("Model did not return structured output.");

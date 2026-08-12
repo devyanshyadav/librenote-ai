@@ -111,6 +111,7 @@ export const studioGenerateOptionsSchema = z.object({
   dataTableLanguage: audioLanguageSchema.optional(),
   dataTableDetailLevel: reportDetailLevelSchema.optional(),
   dataTableFormat: dataTableFormatSchema.optional(),
+  visualFlowDiagramType: z.string().optional(),
   customPrompt: z.string().trim().max(2000).optional(),
 });
 
@@ -277,7 +278,9 @@ export const reportKeyTakeawayItemSchema = z.object({
 export type ReportKeyTakeawayItem = z.infer<typeof reportKeyTakeawayItemSchema>;
 
 export const reportBannerSchema = z.object({
-  alt: z.string().describe("Short accessibility description of the banner image."),
+  alt: z
+    .string()
+    .describe("Short accessibility description of the banner image."),
   url: z.string().url().describe("HTTPS URL of the banner image."),
 });
 
@@ -446,7 +449,9 @@ export const dataTableRowSchema = z.object({
   rowLabel: z
     .string()
     .optional()
-    .describe("Optional primary row title when it should stand apart from cells."),
+    .describe(
+      "Optional primary row title when it should stand apart from cells.",
+    ),
 });
 
 export type DataTableRow = z.infer<typeof dataTableRowSchema>;
@@ -510,9 +515,7 @@ export const mindMapNodeSchema = z.object({
 });
 
 export const mindMapEdgeSchema = z.object({
-  id: z
-    .string()
-    .describe('Unique edge id string (e.g. "edge-root-theme-1").'),
+  id: z.string().describe('Unique edge id string (e.g. "edge-root-theme-1").'),
   source: z
     .string()
     .describe(
@@ -521,7 +524,7 @@ export const mindMapEdgeSchema = z.object({
   target: z
     .string()
     .describe(
-      "Child node id from nodes — must exactly match an existing node id and cannot be \"root\".",
+      'Child node id from nodes — must exactly match an existing node id and cannot be "root".',
     ),
 });
 
@@ -671,7 +674,9 @@ export const visualFlowContentSchema = z.object({
     ),
   description: z
     .string()
-    .describe("One-sentence summary explaining the workflow or process flow represented."),
+    .describe(
+      "One-sentence summary explaining the workflow or process flow represented.",
+    ),
   diagramType: z
     .enum([
       "flowchart",
@@ -679,9 +684,7 @@ export const visualFlowContentSchema = z.object({
       "class",
       "er",
       "c4",
-      "architecture",
       "packet",
-      "zenuml",
       "state",
       "journey",
       "git",
@@ -695,7 +698,6 @@ export const visualFlowContentSchema = z.object({
       "mindmap",
       "sankey",
       "quadrant",
-      "block",
       "radar",
       "treemap",
       "venn",
@@ -706,10 +708,10 @@ export const visualFlowContentSchema = z.object({
     .string()
     .describe(
       "Strictly valid, compileable, and syntax-correct Mermaid.js diagram code. IMPORTANT rules:\n" +
-      "1. Start with the correct header matching diagramType.\n" +
-      "2. Wrap node/actor labels and message strings in double quotes: ID[\"Label Here\"]. Use alphanumeric IDs only.\n" +
-      "3. NEVER use literal newlines inside label strings — use <br/> for line breaks.\n" +
-      "4. Banned characters: Raw square brackets [ ] inside labels are BANNED. Middle-dot · and non-ASCII math symbols are BANNED.",
+        "1. Start with the correct header matching diagramType.\n" +
+        '2. Wrap node/actor labels and message strings in double quotes: ID["Label Here"]. Use alphanumeric IDs only.\n' +
+        "3. NEVER use literal newlines inside label strings — use <br/> for line breaks.\n" +
+        "4. Banned characters: Raw square brackets [ ] inside labels are BANNED. Middle-dot · and non-ASCII math symbols are BANNED.",
     ),
 });
 

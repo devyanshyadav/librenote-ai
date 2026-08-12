@@ -1,4 +1,4 @@
-export const CHAT_MODEL_ID = "mistralai/mistral-small-2603";
+export const CHAT_MODEL_ID = "mistralai/ministral-8b-2512";
 export const CHAT_FALLBACK_MODEL_ID = "mistralai/ministral-8b-2512";
 export const EMBEDDING_MODEL_ID = "mistralai/mistral-embed-2312";
 export const RERANK_MODEL_ID = "cohere/rerank-v3.5";

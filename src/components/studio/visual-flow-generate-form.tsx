@@ -19,47 +19,141 @@ const DIAGRAM_GROUPS = [
   {
     category: "Software Architecture & Design",
     options: [
-      { value: "flowchart", label: "Flowchart", description: "Processes, workflows, and algorithms." },
-      { value: "sequence", label: "Sequence Diagram", description: "API calls, temporal messaging, and system interactions." },
-      { value: "class", label: "Class Diagram", description: "OOP models, interfaces, inheritance, and properties." },
-      { value: "er", label: "Entity Relationship Diagram", description: "DB schemas, primary/foreign keys, and cardinality." },
-      { value: "c4", label: "C4 Diagrams", description: "C4 architecture modeling." },
-      { value: "architecture", label: "Architecture Diagram", description: "Cloud topologies and infrastructure layouts." },
-      { value: "packet", label: "Packet Diagram", description: "Network protocol byte headers, frame formats, and binary structure." },
-      { value: "zenuml", label: "ZenUML Sequence", description: "Code-like syntax for rendering sequence diagrams." },
+      {
+        value: "flowchart",
+        label: "Flowchart",
+        description: "Processes, workflows, and algorithms.",
+      },
+      {
+        value: "sequence",
+        label: "Sequence Diagram",
+        description: "API calls, temporal messaging, and system interactions.",
+      },
+      {
+        value: "class",
+        label: "Class Diagram",
+        description: "OOP models, interfaces, inheritance, and properties.",
+      },
+      {
+        value: "er",
+        label: "Entity Relationship Diagram",
+        description: "DB schemas, primary/foreign keys, and cardinality.",
+      },
+      {
+        value: "c4",
+        label: "C4 Diagrams",
+        description: "C4 architecture modeling.",
+      },
+      {
+        value: "packet",
+        label: "Packet Diagram",
+        description:
+          "Network protocol byte headers, frame formats, and binary structure.",
+      },
     ],
   },
   {
     category: "Processes, Workflows & Systems Engineering",
     options: [
-      { value: "state", label: "State Diagram", description: "Finite state machines and lifecycle transitions." },
-      { value: "journey", label: "User Journey", description: "Multi-step user workflows tagged with satisfaction scores." },
-      { value: "git", label: "Git Graph", description: "Git branching, commits, merges, and tags." },
-      { value: "requirement", label: "Requirement Diagram", description: "Requirements, risks, element specifications, and verification tests." },
-      { value: "kanban", label: "Kanban Board", description: "Column-based task tracking (To Do, In Progress, Done)." },
-      { value: "eventmodeling", label: "Event Modeling", description: "Domain events, commands, and read models over time." },
+      {
+        value: "state",
+        label: "State Diagram",
+        description: "Finite state machines and lifecycle transitions.",
+      },
+      {
+        value: "journey",
+        label: "User Journey",
+        description:
+          "Multi-step user workflows tagged with satisfaction scores.",
+      },
+      {
+        value: "git",
+        label: "Git Graph",
+        description: "Git branching, commits, merges, and tags.",
+      },
+      {
+        value: "requirement",
+        label: "Requirement Diagram",
+        description:
+          "Requirements, risks, element specifications, and verification tests.",
+      },
+      {
+        value: "kanban",
+        label: "Kanban Board",
+        description: "Column-based task tracking (To Do, In Progress, Done).",
+      },
+      {
+        value: "eventmodeling",
+        label: "Event Modeling",
+        description: "Domain events, commands, and read models over time.",
+      },
     ],
   },
   {
     category: "Project Management & Timelines",
     options: [
-      { value: "gantt", label: "Gantt Chart", description: "Project schedules, task dependencies, and milestones." },
-      { value: "timeline", label: "Timeline", description: "Chronological events, historical milestones, and process stages." },
+      {
+        value: "gantt",
+        label: "Gantt Chart",
+        description: "Project schedules, task dependencies, and milestones.",
+      },
+      {
+        value: "timeline",
+        label: "Timeline",
+        description:
+          "Chronological events, historical milestones, and process stages.",
+      },
     ],
   },
   {
     category: "Data Visualizations & Analytics",
     options: [
-      { value: "pie", label: "Pie Chart", description: "Proportional percentage breakdowns." },
-      { value: "xychart", label: "XY Chart", description: "Combined line and bar charts." },
-      { value: "mindmap", label: "Mindmap", description: "Hierarchical concept trees and brainstorming maps." },
-      { value: "sankey", label: "Sankey Diagram", description: "Flow magnitudes between nodes (budgets, traffic, energy)." },
-      { value: "quadrant", label: "Quadrant Chart", description: "2x2 matrices (risk vs. reward, priority grids)." },
-      { value: "block", label: "Block Diagram", description: "Spatial block layouts and system boundary grids." },
-      { value: "radar", label: "Radar Chart", description: "Multi-axis spider/radar charts." },
-      { value: "treemap", label: "Treemap", description: "Hierarchical nested rectangular data visualizers." },
-      { value: "venn", label: "Venn Diagram", description: "Overlapping set relationships." },
-      { value: "ishikawa", label: "Ishikawa / Fishbone", description: "Root-cause analysis diagrams." },
+      {
+        value: "pie",
+        label: "Pie Chart",
+        description: "Proportional percentage breakdowns.",
+      },
+      {
+        value: "xychart",
+        label: "XY Chart",
+        description: "Combined line and bar charts.",
+      },
+      {
+        value: "mindmap",
+        label: "Mindmap",
+        description: "Hierarchical concept trees and brainstorming maps.",
+      },
+      {
+        value: "sankey",
+        label: "Sankey Diagram",
+        description:
+          "Flow magnitudes between nodes (budgets, traffic, energy).",
+      },
+      {
+        value: "quadrant",
+        label: "Quadrant Chart",
+        description: "2x2 matrices (risk vs. reward, priority grids).",
+      },
+      {
+        value: "radar",
+        label: "Radar Chart",
+        description: "Multi-axis spider/radar charts.",
+      },
+      {
+        value: "treemap",
+        label: "Treemap",
+        description: "Hierarchical nested rectangular data visualizers.",
+      },
+      {
+        value: "venn",
+        label: "Venn Diagram",
+        description: "Overlapping set relationships.",
+      },
+      {
+        value: "ishikawa",
+        label: "Ishikawa / Fishbone",
+        description: "Root-cause analysis diagrams.",
+      },
     ],
   },
 ];
@@ -79,8 +173,12 @@ export const VisualFlowGenerateForm = forwardRef<
 
   useImperativeHandle(ref, () => ({
     getOptions: (): StudioGenerateOptions => {
-      const options: StudioGenerateOptions = {};
-      const typeDesc = selectedDiagram ? `Generate a Mermaid ${selectedDiagram.value} diagram.` : "";
+      const options: StudioGenerateOptions = {
+        visualFlowDiagramType: diagramType,
+      };
+      const typeDesc = selectedDiagram
+        ? `Generate a Mermaid ${selectedDiagram.value} diagram.`
+        : "";
       const topicText = topic.trim();
 
       if (topicText) {
@@ -104,7 +202,7 @@ export const VisualFlowGenerateForm = forwardRef<
         <Label htmlFor="diagram-type-select">Diagram Type</Label>
         <Select
           value={diagramType}
-          onValueChange={setDiagramType}
+          onValueChange={(val) => setDiagramType(val || "flowchart")}
           disabled={disabled}
         >
           <SelectTrigger id="diagram-type-select" className="w-full bg-card!">

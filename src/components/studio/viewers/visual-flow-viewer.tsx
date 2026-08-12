@@ -189,7 +189,14 @@ export function VisualFlowViewer({
     <div className="flex flex-col w-full h-[calc(100vh-8rem)] gap-4 overflow-hidden">
       {/* Header Info */}
       <div className="flex flex-col gap-1 border-b border-border pb-3 px-1 shrink-0">
-        <h2 className="text-xl font-bold tracking-tight text-foreground">{content.title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-foreground">{content.title}</h2>
+          {content.diagramType && (
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 capitalize">
+              {content.diagramType}
+            </span>
+          )}
+        </div>
         <p className="text-sm text-muted-foreground leading-relaxed">{content.description}</p>
       </div>
 
