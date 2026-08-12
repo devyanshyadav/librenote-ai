@@ -201,7 +201,7 @@ bun dev
 
 ### Studio artifacts
 
-`mind-map` · `flashcards` · `quiz` · `report` · `data-table` · `audio-overview` · `note`
+`mind-map` · `flashcards` · `quiz` · `report` · `data-table` · `visual-flow` · `audio-overview` · `note`
 
 ---
 
@@ -262,6 +262,7 @@ src/
   lib/           # Services (chat, sources, studio, RAG)
 scripts/
   setup.ts       # One-command setup script
+  validate-mermaid.mjs  # Long-lived Mermaid validation worker (Studio diagrams)
 supabase/
   config.toml    # Local Supabase config
   seed.sql       # Storage buckets + auth triggers

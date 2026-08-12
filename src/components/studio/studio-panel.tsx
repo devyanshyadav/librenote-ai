@@ -434,12 +434,12 @@ export function StudioArtifactViewPanel({
   return (
     <ScrollArea className="h-full">
       <div className="h-full min-h-0 max-w-5xl mx-auto">
-      <StudioArtifactViewer
-        artifact={activeArtifactDetail}
-        sources={sources}
-        notebookId={notebookId}
-      />
-    </div>
+        <StudioArtifactViewer
+          artifact={activeArtifactDetail}
+          sources={sources}
+          notebookId={notebookId}
+        />
+      </div>
     </ScrollArea>
   );
 }

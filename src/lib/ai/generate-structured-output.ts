@@ -7,6 +7,7 @@ import {
   type StopCondition,
   type ToolSet,
   wrapLanguageModel,
+  isStepCount,
 } from "ai";
 import type { z } from "zod";
 import { repairJsonTextValue } from "@/lib/ai/json-repair";
@@ -61,7 +62,7 @@ async function generateStructuredOutputAttempt<OBJECT>(
     prompt: options.prompt,
     maxRetries: API_MAX_RETRIES,
     tools: options.tools,
-    stopWhen: options.stopWhen,
+    stopWhen: options.stopWhen || isStepCount(5),
   });
 
   if (result.output == null) {

@@ -38,6 +38,12 @@ export const STUDIO_FEATURES: {
     className: "size-6",
   },
   {
+    slug: "visual-flow",
+    label: "Diagrams",
+    icon: "fluent-mdl2:venn-diagram",
+    className: "size-6",
+  },
+  {
     slug: "audio-overview",
     label: "Audio Overview",
     icon: "hugeicons:ai-audio",

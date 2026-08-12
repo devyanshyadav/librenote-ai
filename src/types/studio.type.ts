@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { KOKORO_AUDIO_LANGUAGE_CODES } from "@/lib/constants/kokoro.constants";
+import { visualFlowDiagramTypeSchema } from "@/lib/studio/visual-flow.constants";
 
 export const studioArtifactTypeSchema = z.enum([
   "mind_map",
@@ -8,6 +9,7 @@ export const studioArtifactTypeSchema = z.enum([
   "quiz",
   "data_table",
   "audio_overview",
+  "visual_flow",
   "note",
 ]);
 
@@ -110,6 +112,7 @@ export const studioGenerateOptionsSchema = z.object({
   dataTableLanguage: audioLanguageSchema.optional(),
   dataTableDetailLevel: reportDetailLevelSchema.optional(),
   dataTableFormat: dataTableFormatSchema.optional(),
+  visualFlowDiagramType: visualFlowDiagramTypeSchema.optional(),
   customPrompt: z.string().trim().max(2000).optional(),
 });
 
@@ -128,6 +131,7 @@ export const studioArtifactSlugSchema = z.enum([
   "quiz",
   "data-table",
   "audio-overview",
+  "visual-flow",
   "note",
 ]);
 
@@ -167,6 +171,7 @@ export const STUDIO_ARTIFACT_SLUG_TO_TYPE: Record<
   quiz: "quiz",
   "data-table": "data_table",
   "audio-overview": "audio_overview",
+  "visual-flow": "visual_flow",
   note: "note",
 };
 
@@ -274,7 +279,9 @@ export const reportKeyTakeawayItemSchema = z.object({
 export type ReportKeyTakeawayItem = z.infer<typeof reportKeyTakeawayItemSchema>;
 
 export const reportBannerSchema = z.object({
-  alt: z.string().describe("Short accessibility description of the banner image."),
+  alt: z
+    .string()
+    .describe("Short accessibility description of the banner image."),
   url: z.string().url().describe("HTTPS URL of the banner image."),
 });
 
@@ -443,7 +450,9 @@ export const dataTableRowSchema = z.object({
   rowLabel: z
     .string()
     .optional()
-    .describe("Optional primary row title when it should stand apart from cells."),
+    .describe(
+      "Optional primary row title when it should stand apart from cells.",
+    ),
 });
 
 export type DataTableRow = z.infer<typeof dataTableRowSchema>;
@@ -507,9 +516,7 @@ export const mindMapNodeSchema = z.object({
 });
 
 export const mindMapEdgeSchema = z.object({
-  id: z
-    .string()
-    .describe('Unique edge id string (e.g. "edge-root-theme-1").'),
+  id: z.string().describe('Unique edge id string (e.g. "edge-root-theme-1").'),
   source: z
     .string()
     .describe(
@@ -518,7 +525,7 @@ export const mindMapEdgeSchema = z.object({
   target: z
     .string()
     .describe(
-      "Child node id from nodes — must exactly match an existing node id and cannot be \"root\".",
+      'Child node id from nodes — must exactly match an existing node id and cannot be "root".',
     ),
 });
 
@@ -660,6 +667,33 @@ export const audioOverviewScriptSchema = audioOverviewContentSchema
 
 export type AudioOverviewScript = z.infer<typeof audioOverviewScriptSchema>;
 
+export const visualFlowContentSchema = z.object({
+  title: z
+    .string()
+    .describe(
+      "Descriptive visual flow title naming the notebook topic (not a generic label like 'Flowcharts & Diagrams').",
+    ),
+  description: z
+    .string()
+    .describe(
+      "One-sentence summary explaining the workflow or process flow represented.",
+    ),
+  diagramType: visualFlowDiagramTypeSchema.describe(
+    "Mermaid diagram type that best visualizes the concept context.",
+  ),
+  code: z
+    .string()
+    .describe(
+      "Strictly valid, compileable, and syntax-correct Mermaid.js diagram code. IMPORTANT rules:\n" +
+        "1. Start with the correct header matching diagramType.\n" +
+        '2. Wrap node/actor labels and message strings in double quotes: ID["Label Here"]. Use alphanumeric IDs only.\n' +
+        "3. NEVER use literal newlines inside label strings — use <br/> for line breaks.\n" +
+        "4. Banned characters: Raw square brackets [ ] inside labels are BANNED. Middle-dot · and non-ASCII math symbols are BANNED.",
+    ),
+});
+
+export type VisualFlowContent = z.infer<typeof visualFlowContentSchema>;
+
 export const noteContentSchema = z.object({
   title: z.string(),
   body: z.string(),
@@ -674,6 +708,7 @@ export type StudioArtifactContent =
   | DataTableContent
   | MindMapContent
   | AudioOverviewContent
+  | VisualFlowContent
   | NoteContent;
 
 export interface SourceNote {
@@ -723,6 +758,10 @@ export type StudioArtifactItem =
   | (StudioArtifactBase & {
       type: "audio_overview";
       content: AudioOverviewContent | null;
+    })
+  | (StudioArtifactBase & {
+      type: "visual_flow";
+      content: VisualFlowContent | null;
     })
   | (StudioArtifactBase & { type: "note"; content: NoteContent | null });
 

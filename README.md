@@ -15,7 +15,7 @@
 </p>
 
 <p align="center">
-  Upload your sources, chat with grounded citations, and generate studio artifacts — flashcards, quizzes, mind maps, audio overviews, and more — fully on your machine or server.
+  Upload your sources, chat with grounded citations, and generate studio artifacts — flashcards, quizzes, mind maps, diagrams, audio overviews, and more — fully on your machine or server.
 </p>
 
 <p align="center">
@@ -35,7 +35,7 @@ If you like the *idea* of NotebookLM but want ownership of your data, choice of 
 | **Data privacy** | Processed in Google's cloud | Your Postgres, your Supabase, your API keys |
 | **AI models** | Google Gemini only | Any model on [OpenRouter](https://openrouter.ai) (Claude, GPT, Gemini, Llama, …) |
 | **Audio overviews** | Google-hosted, usage limits apply | Podcast-style audio you generate on your stack |
-| **Studio artifacts** | Limited set, closed product | 7 types: mind maps, flashcards, quizzes, reports, data tables, audio, notes |
+| **Studio artifacts** | Limited set, closed product | 8 types: mind maps, flashcards, quizzes, reports, data tables, diagrams, audio, notes |
 | **Open source** | Closed | MIT — inspect, fork, extend |
 | **Multi-user** | Tied to Google account | Self-hosted auth with per-user data isolation |
 | **Setup** | Sign in with Google | One command: `bun run setup` |
@@ -64,6 +64,7 @@ Ask questions and get answers **grounded in your uploads**, with inline citation
 | **Quiz** | Test yourself on what you read |
 | **Report** | Structured write-up with charts |
 | **Data table** | Comparisons, timelines, metrics |
+| **Diagrams** | Mermaid flowcharts, sequence, ER, Gantt, and 20+ diagram types |
 | **Audio overview** | Podcast-style summary you can listen to |
 | **Note** | Rich notes pinned to your notebook |
 

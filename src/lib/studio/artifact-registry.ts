@@ -1,6 +1,5 @@
-import { type StopCondition, type ToolSet } from "ai";
-// import { stepCountIs } from "ai";
-import type { z } from "zod";
+import { isStepCount, type StopCondition, type ToolSet } from "ai";
+import type z from "zod";
 import { buildAudioOverviewInstructionBlock } from "@/lib/studio/audio-overview-options";
 import { buildDataTableInstructionBlock } from "@/lib/studio/data-table-options";
 import { buildFlashcardInstructionBlock } from "@/lib/studio/flashcard-options";
@@ -11,6 +10,9 @@ import {
 } from "@/lib/studio/notebook-brief-context";
 import { buildQuizInstructionBlock } from "@/lib/studio/quiz-options";
 import { buildReportInstructionBlock } from "@/lib/studio/report-options";
+import { DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE } from "@/lib/studio/visual-flow.constants";
+// import { stepCountIs } from "ai";
+import { getDiagramExampleTool } from "@/lib/studio/visual-flow-options";
 // import {
 //   createStudioTools,
 //   pickStudioTools,
@@ -25,6 +27,7 @@ import {
   reportContentSchema,
   type StudioArtifactContext,
   type StudioGeneratedArtifactType,
+  visualFlowContentSchema,
 } from "@/types";
 
 // const REPORT_MAX_STEPS = 20;
@@ -313,6 +316,49 @@ ${buildSourceIdList(brief)}
 ${formatRules}
 Create the script for ${brief.sources.length} source(s) and give each source proportional coverage.`;
     },
+  },
+  visual_flow: {
+    title: "Diagrams & Visual Models",
+    schema: visualFlowContentSchema,
+    schemaDescription:
+      "Universal Mermaid diagram mapping: title, description, diagramType (flowchart, sequence, class, er, c4, packet, state, journey, git, requirement, kanban, eventmodeling, gantt, timeline, pie, xychart, mindmap, sankey, quadrant, radar, treemap, venn, ishikawa), code (Mermaid syntax).",
+    system: (ctx) => {
+      const selectedType =
+        ctx?.options?.visualFlowDiagramType ?? DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE;
+      return `You are a helpful assistant.
+
+CRITICAL RULES:
+1. DIAGRAM QUERIES & SYNTAX RULES: You MUST generate a diagram of type "${selectedType}". First, call the 'getDiagramExample' tool with diagramType: "${selectedType}" to retrieve the syntax rules and multiple valid examples. Study the returned rules and different patterns carefully, and generate a customized, original diagram matching the user's specific request. Do not copy any example verbatim.
+2. STRICT JSON FORMAT: You MUST generate a valid JSON object matching the requested output schema. Do not output any conversational introductions, greetings, markdown blocks (like \`\`\`json), or post-explanations. Your output must start with "{" and end with "}". Keep the JSON raw and clean.
+
+Ensure the diagram content is highly accurate, insightful, and clean. The layout must be simple, meaningful, and uncluttered.
+${ARTIFACT_TITLE_RULE}
+
+### ABSOLUTE MERMAID SYNTAX LAWS:
+1. Valid Header: Start with the correct header matching the requested diagramType (e.g., 'flowchart TD', 'sequenceDiagram', 'classDiagram', etc.). Never use 'graph TD' for flowcharts.
+2. Quoted Labels: Wrap node/actor labels and message strings in double quotes: ID["Label Here"]. Use simple alphanumeric IDs only (no spaces, dashes, or slashes in IDs).
+3. Line Breaks: Use '<br/>' for line breaks inside label strings. Never use actual raw newlines inside label strings.
+4. Banned Characters:
+   - Raw square brackets [ ] are BANNED inside node labels (replace with round brackets () or single quotes).
+   - Middle-dot · and non-ASCII math symbols (×, ÷, ≤, ≥, etc.) are BANNED inside labels. Use ASCII equivalent operators (*, /, <=, >=).
+5. Connector Syntax: Write connections cleanly line-by-line (e.g., A --> B). Do not group links (no 'A & B --> C').`;
+    },
+    buildUserPrompt: (brief, ctx) => {
+      const selectedType =
+        ctx?.options?.visualFlowDiagramType ?? DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE;
+      return `${buildBriefContext(brief)}
+
+Available source ids:
+${buildSourceIdList(brief)}
+
+Generate a valid, fully compileable Mermaid diagram based on the brief above.
+IMPORTANT: You MUST generate a diagram of type "${selectedType}". Set the "diagramType" property in the output JSON to exactly "${selectedType}" and generate the corresponding code.
+Strictly adhere to the banned character rules (no raw [ ] or ·), line break constraints, and double-quoting to ensure a flawless render.`;
+    },
+    tools: {
+      getDiagramExample: getDiagramExampleTool,
+    },
+    stopWhen: isStepCount(6),
   },
 };
 

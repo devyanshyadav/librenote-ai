@@ -46,6 +46,7 @@ export const artifactTypeEnum = pgEnum("artifact_type", [
   "quiz",
   "infographic",
   "data_table",
+  "visual_flow",
   "note",
 ]);
 

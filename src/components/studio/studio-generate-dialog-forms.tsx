@@ -1,12 +1,13 @@
 "use client";
 
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import {  useMemo, useState } from "react";
 import { AudioOverviewGenerateForm } from "@/components/studio/audio-overview-generate-form";
 import { DataTableGenerateForm } from "@/components/studio/data-table-generate-form";
 import { FlashcardsGenerateForm } from "@/components/studio/flashcards-generate-form";
 import { MindMapGenerateForm } from "@/components/studio/mind-map-generate-form";
 import { QuizGenerateForm } from "@/components/studio/quiz-generate-form";
 import { ReportGenerateForm } from "@/components/studio/report-generate-form";
+import { VisualFlowGenerateForm } from "@/components/studio/visual-flow-generate-form";
 import type {
   StudioGenerateFormComponent,
   StudioGenerateFormEntry,
@@ -251,116 +252,6 @@ function MaxCountField({
     </div>
   );
 }
-
-function createCountLimitedForm(config: {
-  max: number;
-  countLabel: string;
-  countUnit: string;
-  ids: {
-    maxCount: string;
-    focusTopic: string;
-    customPrompt: string;
-  };
-  focusPlaceholder: string;
-}): StudioGenerateFormComponent {
-  return forwardRef<StudioGenerateFormHandle, StudioGenerateFormProps>(
-    function CountLimitedGenerateForm({ disabled }, ref) {
-      const maxCount = useMaxCountState(config.max);
-      const instructions = useInstructionFields();
-
-      useImperativeHandle(ref, () => ({
-        getOptions: () =>
-          instructions.buildOptions(
-            maxCount.parsed != null
-              ? `${config.countLabel} should be ${maxCount.parsed}.`
-              : undefined,
-          ),
-        isValid: () => maxCount.isValid,
-        reset: () => {
-          maxCount.reset();
-          instructions.reset();
-        },
-      }));
-
-      return (
-        <div className="space-y-4">
-          <MaxCountField
-            id={config.ids.maxCount}
-            label={config.countUnit}
-            placeholder={`e.g. 20 (optional)`}
-            max={config.max}
-            value={maxCount.value}
-            invalid={!maxCount.isValid}
-            onChange={maxCount.setValue}
-            disabled={disabled}
-          />
-          <FocusTopicField
-            id={config.ids.focusTopic}
-            placeholder={config.focusPlaceholder}
-            value={instructions.focusTopic}
-            onChange={instructions.setFocusTopic}
-            disabled={disabled}
-          />
-          <CustomInstructionsField
-            id={config.ids.customPrompt}
-            value={instructions.customPrompt}
-            onChange={instructions.setCustomPrompt}
-            disabled={disabled}
-          />
-        </div>
-      );
-    },
-  );
-}
-
-function createDetailLevelForm(config: {
-  ids: {
-    focusTopic: string;
-    customPrompt: string;
-  };
-  focusPlaceholder: string;
-}): StudioGenerateFormComponent {
-  return forwardRef<StudioGenerateFormHandle, StudioGenerateFormProps>(
-    function DetailLevelGenerateForm({ disabled }, ref) {
-      const [detailLevel, setDetailLevel] = useState<DetailLevel>("standard");
-      const instructions = useInstructionFields();
-
-      useImperativeHandle(ref, () => ({
-        getOptions: () =>
-          instructions.buildOptions(DETAIL_LEVEL_INSTRUCTIONS[detailLevel]),
-        isValid: () => true,
-        reset: () => {
-          setDetailLevel("standard");
-          instructions.reset();
-        },
-      }));
-
-      return (
-        <div className="space-y-4">
-          <DetailLevelField
-            value={detailLevel}
-            onChange={setDetailLevel}
-            disabled={disabled}
-          />
-          <FocusTopicField
-            id={config.ids.focusTopic}
-            placeholder={config.focusPlaceholder}
-            value={instructions.focusTopic}
-            onChange={instructions.setFocusTopic}
-            disabled={disabled}
-          />
-          <CustomInstructionsField
-            id={config.ids.customPrompt}
-            value={instructions.customPrompt}
-            onChange={instructions.setCustomPrompt}
-            disabled={disabled}
-          />
-        </div>
-      );
-    },
-  );
-}
-
 export const STUDIO_GENERATE_FORMS: Record<
   Exclude<StudioArtifactSlug, "note">,
   StudioGenerateFormEntry
@@ -392,6 +283,12 @@ export const STUDIO_GENERATE_FORMS: Record<
     title: "Mind Map",
     description: "Choose how deep the map goes and what it should focus on.",
     Form: MindMapGenerateForm,
+  },
+  "visual-flow": {
+    title: "Diagrams & Visual Models",
+    description:
+      "Pick a diagram type and describe the workflow, structure, or concept to visualize.",
+    Form: VisualFlowGenerateForm,
   },
   "audio-overview": {
     title: "Audio Overview",

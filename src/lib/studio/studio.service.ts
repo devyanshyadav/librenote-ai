@@ -1,8 +1,7 @@
-import { desc, eq, and } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { type StudioArtifact, studioArtifacts } from "@/db/schema";
-import { generateStructuredOutput } from "@/lib/ai/generate-structured-output";
-import { assertNotebookOwner } from "@/lib/notebooks/notebook.service";
+import { generateArtifactContent } from "@/lib/studio/generate-artifact-content.server";
 import { getArtifactConfig } from "@/lib/studio/artifact-registry";
 import { synthesizeAudioOverviewFile } from "@/lib/studio/audio-overview.service";
 import { normalizeNoteBodyForCreate } from "@/lib/studio/note-content.utils";
@@ -14,6 +13,7 @@ import {
   summarizeFlashcardsOutputForLog,
   summarizeNotebookBriefForLog,
 } from "@/lib/studio/studio-journey-log-details";
+import { assertNotebookOwner } from "@/lib/notebooks/notebook.service";
 import type {
   AudioOverviewContent,
   AudioOverviewScript,
@@ -363,25 +363,33 @@ export async function runStudioArtifactGeneration(
       type,
     });
 
-    const { output, toolResults } = await generateStructuredOutput({
-      schema: config.schema,
-      schemaName: type,
-      schemaDescription: config.schemaDescription,
-      system: config.system,
-      prompt: userPrompt,
-      tools: config.tools,
-      stopWhen: config.stopWhen,
-      onAttemptFailed: ({ attempt, maxAttempts, error }) => {
-        log.step(
-          "artifact",
-          `Generation attempt ${attempt}/${maxAttempts} failed, retrying`,
-          {
-            artifactId: artifact.id,
-            type,
-            error: error instanceof Error ? error.message : String(error),
-          },
-        );
-      },
+    const onAttemptFailed = ({
+      attempt,
+      maxAttempts,
+      error,
+    }: {
+      attempt: number;
+      maxAttempts: number;
+      error: unknown;
+    }) => {
+      log.step(
+        "artifact",
+        `Generation attempt ${attempt}/${maxAttempts} failed, retrying`,
+        {
+          artifactId: artifact.id,
+          type,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    };
+
+    const { output, toolResults } = await generateArtifactContent({
+      type,
+      config,
+      userPrompt,
+      onAttemptFailed,
+      log,
+      artifactId: artifact.id,
     });
 
     const { content, fileUrl } = await finalizeArtifactContent(
