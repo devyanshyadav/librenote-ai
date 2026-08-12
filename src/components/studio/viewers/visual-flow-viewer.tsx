@@ -12,6 +12,7 @@ import mermaid from "mermaid";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FetchLoader } from "@/components/ui/fetch-loader";
 import { useZoomPan } from "@/hooks/use-zoom-pan";
 import type { VisualFlowContent } from "@/types";
 import { ClipboardButton } from "@/components/notebook/chat/clipboard-button";
@@ -94,6 +95,9 @@ export function VisualFlowViewer({ content }: { content: VisualFlowContent }) {
     if (renderKey === lastRenderedKey.current) {
       return;
     }
+
+    setIsInitialized(false);
+    setError(null);
 
     try {
       mermaid.initialize({
@@ -264,10 +268,10 @@ export function VisualFlowViewer({ content }: { content: VisualFlowContent }) {
         ) : null}
 
         {!error && !isInitialized ? (
-          <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-            <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-primary" />
-            <span>Rendering diagram...</span>
-          </div>
+          <FetchLoader
+            text="Rendering diagram..."
+            size="md"
+          />
         ) : null}
 
         <div
