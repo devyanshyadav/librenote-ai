@@ -398,8 +398,9 @@ export const STUDIO_GENERATE_FORMS: Record<
     Form: MindMapGenerateForm,
   },
   "visual-flow": {
-    title: "Flowcharts & Diagrams",
-    description: "Choose your diagram structure type (Flowchart, Sequence, State, Gantt) and what concept workflow to model.",
+    title: "Diagrams & Visual Models",
+    description:
+      "Pick a diagram type and describe the workflow, structure, or concept to visualize.",
     Form: VisualFlowGenerateForm,
   },
   "audio-overview": {

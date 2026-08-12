@@ -1,43 +1,16 @@
 import { tool } from "ai";
 import { z } from "zod";
+import { visualFlowDiagramTypeSchema } from "@/lib/studio/visual-flow.constants";
 
 export const getDiagramExampleTool = tool({
   description:
     "Get complete syntax rules + multiple diverse valid Mermaid examples for a specific diagram type. Use this to learn the full grammar and patterns so you can generate correct, original diagrams instead of copying a single example.",
   inputSchema: z.object({
-    diagramType: z
-      .enum([
-        "flowchart",
-        "sequence",
-        "class",
-        "er",
-        "c4",
-        "packet",
-        "state",
-        "journey",
-        "git",
-        "requirement",
-        "kanban",
-        "eventmodeling",
-        "gantt",
-        "timeline",
-        "pie",
-        "xychart",
-        "mindmap",
-        "sankey",
-        "quadrant",
-        "radar",
-        "treemap",
-        "venn",
-        "ishikawa",
-      ])
-      .describe(
-        "The diagram type identifier to retrieve rules and examples for.",
-      ),
+    diagramType: visualFlowDiagramTypeSchema.describe(
+      "The diagram type identifier to retrieve rules and examples for.",
+    ),
   }),
   execute: async ({ diagramType }) => {
-    console.log(`[DEBUG] getDiagramExample called with type: "${diagramType}"`);
-
     const knowledge: Record<string, { rules: string; examples: string[] }> = {
       // ───────────────────────────────────────────────
       // FLOWCHART
@@ -1946,10 +1919,6 @@ GOTCHA: Newer type (v11.13+). Indentation defines the fishbone hierarchy.`,
     if (!entry) {
       return { error: "No knowledge found for this diagram type." };
     }
-
-    console.log(
-      `[DEBUG] Returning rules + ${entry.examples.length} examples for "${diagramType}"`,
-    );
 
     return {
       diagramType,

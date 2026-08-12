@@ -39,8 +39,8 @@ export const STUDIO_FEATURES: {
   },
   {
     slug: "visual-flow",
-    label: "Flowcharts",
-    icon: "material-symbols:flowsheet-outline-rounded",
+    label: "Diagrams",
+    icon: "fluent-mdl2:venn-diagram",
     className: "size-6",
   },
   {

@@ -109,13 +109,7 @@ export function StudioArtifactViewer({
         />
       );
     case "visual_flow":
-      return (
-        <VisualFlowViewer
-          content={artifact.content}
-          sources={sources}
-          mode={mode}
-        />
-      );
+      return <VisualFlowViewer content={artifact.content} />;
     case "audio_overview":
       return (
         <AudioOverviewViewer

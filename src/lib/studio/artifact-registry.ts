@@ -1,6 +1,7 @@
 import { type StopCondition, type ToolSet } from "ai";
 // import { stepCountIs } from "ai";
 import { getDiagramExampleTool } from "@/lib/studio/visual-flow-options";
+import { DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE } from "@/lib/studio/visual-flow.constants";
 import { buildAudioOverviewInstructionBlock } from "@/lib/studio/audio-overview-options";
 import { buildDataTableInstructionBlock } from "@/lib/studio/data-table-options";
 import { buildFlashcardInstructionBlock } from "@/lib/studio/flashcard-options";
@@ -322,7 +323,8 @@ Create the script for ${brief.sources.length} source(s) and give each source pro
     schemaDescription:
       "Universal Mermaid diagram mapping: title, description, diagramType (flowchart, sequence, class, er, c4, packet, state, journey, git, requirement, kanban, eventmodeling, gantt, timeline, pie, xychart, mindmap, sankey, quadrant, radar, treemap, venn, ishikawa), code (Mermaid syntax).",
     system: (ctx) => {
-      const selectedType = ctx?.options?.visualFlowDiagramType || "flowchart";
+      const selectedType =
+        ctx?.options?.visualFlowDiagramType ?? DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE;
       return `You are a helpful assistant.
 
 CRITICAL RULES:
@@ -342,7 +344,8 @@ ${ARTIFACT_TITLE_RULE}
 5. Connector Syntax: Write connections cleanly line-by-line (e.g., A --> B). Do not group links (no 'A & B --> C').`;
     },
     buildUserPrompt: (brief, ctx) => {
-      const selectedType = ctx?.options?.visualFlowDiagramType || "flowchart";
+      const selectedType =
+        ctx?.options?.visualFlowDiagramType ?? DEFAULT_VISUAL_FLOW_DIAGRAM_TYPE;
       return `${buildBriefContext(brief)}
 
 Available source ids:

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { KOKORO_AUDIO_LANGUAGE_CODES } from "@/lib/constants/kokoro.constants";
+import { visualFlowDiagramTypeSchema } from "@/lib/studio/visual-flow.constants";
 
 export const studioArtifactTypeSchema = z.enum([
   "mind_map",
@@ -111,7 +112,7 @@ export const studioGenerateOptionsSchema = z.object({
   dataTableLanguage: audioLanguageSchema.optional(),
   dataTableDetailLevel: reportDetailLevelSchema.optional(),
   dataTableFormat: dataTableFormatSchema.optional(),
-  visualFlowDiagramType: z.string().optional(),
+  visualFlowDiagramType: visualFlowDiagramTypeSchema.optional(),
   customPrompt: z.string().trim().max(2000).optional(),
 });
 
@@ -677,33 +678,9 @@ export const visualFlowContentSchema = z.object({
     .describe(
       "One-sentence summary explaining the workflow or process flow represented.",
     ),
-  diagramType: z
-    .enum([
-      "flowchart",
-      "sequence",
-      "class",
-      "er",
-      "c4",
-      "packet",
-      "state",
-      "journey",
-      "git",
-      "requirement",
-      "kanban",
-      "eventmodeling",
-      "gantt",
-      "timeline",
-      "pie",
-      "xychart",
-      "mindmap",
-      "sankey",
-      "quadrant",
-      "radar",
-      "treemap",
-      "venn",
-      "ishikawa",
-    ])
-    .describe("Mermaid diagram type that best visualizes the concept context."),
+  diagramType: visualFlowDiagramTypeSchema.describe(
+    "Mermaid diagram type that best visualizes the concept context.",
+  ),
   code: z
     .string()
     .describe(

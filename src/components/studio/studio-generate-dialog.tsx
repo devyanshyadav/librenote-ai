@@ -106,7 +106,7 @@ export function StudioGenerateDialog({
           <DialogDescription>{entry.description}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
+        <div className="space-y-5 overflow-y-auto max-h-[70vh] pr-2">
           <StudioSourcePicker
             sources={sources}
             selectedSourceIds={selectedSourceIds}
