@@ -45,7 +45,7 @@ Build **LibreNote AI** — an open-source app where you can:
 
 1. **Add sources** — PDFs, Word docs, web pages, YouTube, audio, and more
 2. **Chat with citations** — answers grounded in your sources, with clickable references
-3. **Generate studio artifacts** — mind maps, flashcards, quizzes, reports, data tables, audio overviews, and notes
+3. **Generate studio artifacts** — mind maps, flashcards, quizzes, reports, data tables, Mermaid diagrams, audio overviews, and notes
 
 **Core principles:**
 
@@ -400,14 +400,26 @@ When generating any Studio artifact:
 
 ### Registry pattern
 
-Each artifact type (mind map, quiz, flashcards, etc.) is defined in one config:
+Each artifact type (mind map, quiz, flashcards, diagrams, etc.) is defined in one config:
 
 - Zod schema (what the LLM must return)
 - System and user prompts
 - Icon and title
-- Optional generation options (e.g. quiz length, audio style)
+- Optional tools (e.g. diagram syntax examples)
+- Optional generation options (quiz length, audio style, diagram type)
 
 Adding a new artifact type = schema + prompts + viewer component.
+
+### Unified generation
+
+All artifact types share one code path — `generateArtifactContent()` in `src/lib/studio/generate-artifact-content.server.ts`:
+
+1. Load config from the artifact registry
+2. Call `generateStructuredOutput()` (schema + tools + retries for JSON)
+3. Optionally run a type-specific **output validator**
+4. If validation fails, append the error to the prompt and retry (up to 5 attempts)
+
+Types without a validator (mind map, quiz, report, etc.) skip step 3–4. Only types that need post-generation checks register one.
 
 ### Generation flow
 
@@ -424,8 +436,115 @@ Adding a new artifact type = schema + prompts + viewer component.
 | Quiz | Multiple choice with explanations |
 | Report | Sections (takeaways, text, charts) |
 | Data table | Columns + rows |
+| Diagrams | Mermaid code → interactive SVG (zoom, pan, export) |
 | Audio overview | Script → TTS → WAV file |
 | Note | Manual rich-text note |
+
+### Diagrams (Mermaid)
+
+Diagrams are the most validation-sensitive artifact. The LLM returns JSON with `title`, `description`, `diagramType`, and `code` (Mermaid syntax).
+
+**Supported diagram types (23):** flowchart, sequence, class, ER, C4, packet, state, journey, git, requirement, kanban, event modeling, Gantt, timeline, pie, XY chart, mindmap, sankey, quadrant, radar, treemap, venn, ishikawa.
+
+**Generation:**
+
+1. User picks a diagram type in the Studio dialog (or defaults to flowchart).
+2. The system prompt requires calling `getDiagramExample` — a tool backed by a syntax knowledge base with rules and examples per type.
+3. The model returns structured JSON matching `visualFlowContentSchema`.
+
+**Server-side validation (why a worker process):**
+
+Mermaid and DOMPurify assume a browser DOM. Running them inside the Next.js/Turbopack server bundle breaks (`DOMPurify.addHook is not a function`). The fix is a small **persistent child process**:
+
+| File | Role |
+|------|------|
+| `scripts/validate-mermaid.mjs` | Long-lived worker — bootstraps linkedom + DOMPurify + Mermaid once, accepts JSON-lines on stdin |
+| `src/lib/studio/mermaid-validate.server.ts` | Spawns/reuses the worker, sends code, reads `{ valid, error }` |
+| `src/lib/studio/generate-artifact-content.server.ts` | Registers `visual_flow` in `OUTPUT_VALIDATORS`; retries generation with parse errors |
+
+```text
+Model returns Mermaid code
+        │
+        ▼
+validate-mermaid.mjs  →  mermaid.parse(code)
+        │
+        ├── valid   → save artifact
+        └── invalid → feed parse error back to model → retry
+```
+
+This works on **Node.js serverless** (Vercel, VPS) — not Edge. One worker boot (~2s) per warm instance; retries are fast (~50ms). The client viewer runs the same Mermaid engine for final render.
+
+### Diagram validation issues faced
+
+Server-side Mermaid validation was harder than expected. This section documents what broke and why the current design exists — useful if you extend diagrams or debug validation in production.
+
+#### Why validate on the server at all?
+
+The LLM often returns Mermaid that *looks* correct in JSON but fails at render time (missing tokens, bad labels, wrong headers). Without server validation:
+
+- Artifacts are saved as `completed` with broken code
+- The user only sees errors in the viewer
+- The model never gets parse feedback to self-correct
+
+The goal was: **validate before save**, feed parse errors back to the model, retry until syntax passes (up to 5 attempts).
+
+#### Attempt 1 — `@mermaid-js/parser` (in-process)
+
+First approach: use Mermaid’s official parser package directly in the API route.
+
+| Issue | What happened |
+|-------|----------------|
+| **Missing `await`** | `parse()` returns a `Promise`. Calling it without `await` meant the try/catch never caught failures → `unhandledRejection: Unknown diagram type: flowchart` while logs still showed “validation passed”. |
+| **Limited diagram support** | `@mermaid-js/parser` only supports a small subset (e.g. `architecture`, `pie`, `gitGraph`). Common types like **`flowchart`** and **`sequence`** throw `Unknown diagram type` — useless for the most popular diagrams. |
+
+#### Attempt 2 — `mermaid.parse()` in the Next.js route (in-process)
+
+Second approach: use the full `mermaid` package (same engine as the client viewer) with a minimal DOM via `linkedom` + `dompurify`.
+
+Works in **plain Node** when globals are set before import:
+
+```bash
+# This succeeds outside Next.js
+node scripts/validate-mermaid.mjs
+```
+
+Inside the **Next.js / Turbopack** server bundle it failed:
+
+| Issue | What happened |
+|-------|----------------|
+| **`DOMPurify.addHook is not a function`** | Turbopack bundles `dompurify` incorrectly — Mermaid’s flowchart module imports the factory function, not an initialized instance with `.addHook`. |
+| **`serverExternalPackages`** | Adding `mermaid`, `dompurify`, and `linkedom` to `next.config.ts` helped in theory but did not reliably fix Turbopack dev bundling. |
+| **`window.location` undefined** | `linkedom` does not provide `window.location` by default. Some Mermaid paths destructure `window.location.protocol` and crash. |
+| **Import order** | `dompurify` initializes at **module load time** and reads `globalThis.window`. If it loads before the DOM stub exists, you get a broken stub with no `.addHook` — and the module stays cached for the process lifetime. |
+
+Typical error chain in logs:
+
+```text
+Mermaid validation failed … "DOMPurify.addHook is not a function"
+Studio generation failed … Mermaid validation failed after 3 attempts
+TypeError: Cannot destructure property 'protocol' of 'window.location' as it is undefined
+```
+
+#### Final approach — isolated child process
+
+Because browser libraries cannot be trusted inside the Turbopack bundle, validation moved to a **separate Node/Bun process** that never goes through Next’s bundler:
+
+1. `scripts/validate-mermaid.mjs` — sets `linkedom` globals + `window.location`, then imports `dompurify` and `mermaid`
+2. Boot Mermaid **once**; reuse the process for all validations in that server instance (fast retries)
+3. Parent communicates via **JSON lines** on stdin/stdout — no shared globals with Next.js
+
+This is the same pattern used when a library assumes a browser but you need it on the server: **isolate, don’t bundle**.
+
+#### What still isn’t perfect
+
+| Limitation | Notes |
+|------------|--------|
+| **Node runtime only** | Edge functions cannot spawn this worker. API routes must use the Node.js runtime. |
+| **Cold start cost** | First validation on a fresh instance pays ~2s to boot Mermaid; retries are ~50ms. |
+| **Parse ≠ full render** | `mermaid.parse()` catches most syntax errors; rare runtime issues may still appear only in the client viewer. |
+| **Worker crash** | If the child process exits, pending validations fail until the next spawn. The parent resets and respawns on the next request. |
+
+The client viewer remains the last line of defense — it renders the saved diagram and shows parse errors if anything slipped through.
 
 ### Audio overview (two steps)
 
@@ -470,6 +589,8 @@ There is no separate job queue — work runs via `after()` in the API route (max
 
 **Report** — Table of contents with scroll-spy; print mode via `?print=1`.
 
+**Diagrams** — Mermaid SVG with zoom, pan, copy code, and SVG export. Theme follows light/dark mode.
+
 **Audio overview** — Word-level karaoke highlighting synced to playback.
 
 ### Add sources
@@ -488,6 +609,7 @@ AI systems fail often. The app layers several defenses:
 | **API retries** | Transient network errors retried within one call |
 | **Schema retries** | If JSON doesn’t match schema → up to 3 full regeneration attempts |
 | **JSON repair** | Try to fix malformed JSON before giving up |
+| **Output validation** | Post-generation checks (e.g. Mermaid parse) → up to 5 attempts with error feedback |
 | **Artifact timeout** | After 5 minutes, mark as `timeout` and stop polling |
 | **Embed resume** | Ingest can continue from last embedded chunk after refresh |
 
@@ -513,6 +635,8 @@ Quick reference for the main constants:
 | Agent max steps | 5 |
 | Artifact timeout | 5 min |
 | Schema retry attempts | 3 |
+| Output validation retries (diagrams) | 5 |
+| Mermaid diagram types | 23 |
 
 ---
 
@@ -523,6 +647,8 @@ Quick reference for the main constants:
 - **One Postgres database** for everything (no separate vector DB)
 - **Client-side embed queue** — simple and resumable
 - **Registry-driven Studio** — easy to add new artifact types
+- **Unified generation + optional validators** — one path for all types; Mermaid validation plugged in via `OUTPUT_VALIDATORS`
+- **Isolated Mermaid worker** — reliable server-side parse without fighting the Next.js bundle
 - **Sentence-level citations** — users can verify every claim
 - **OpenRouter** — swap models without rewriting the app
 
@@ -532,6 +658,7 @@ Quick reference for the main constants:
 |------|---------|---------------------|
 | Search | Vector only | Add BM25 + hybrid ranking |
 | Jobs | `after()` in API route | Durable queue (Inngest, Bull) for long runs |
+| Mermaid validation | Child process worker | Dedicated microservice if diagram volume grows |
 | Collaboration | Schema exists, no UI | Ship sharing or remove unused tables |
 | Tests | Manual only | Golden sets for RAG quality |
 | Deploy | Manual VPS + Supabase | Dockerfile + CI/CD |
@@ -541,6 +668,7 @@ Quick reference for the main constants:
 - No billing or usage metering (BYOK only)
 - Email/password auth only (no Google/GitHub OAuth yet)
 - Three artifact types exist in the DB enum but are not in the UI yet (slide deck, video overview, infographic)
+- Diagram validation requires Node.js runtime (not Edge) and a warm worker boot on cold starts
 - No automated test suite
 
 ---
@@ -562,7 +690,7 @@ Possible directions:
 
 LibreNote AI is a full-stack research notebook: **ingest → embed → search → cite → synthesize**. The architecture favors simplicity (one app, one database, OpenRouter for models) while handling real-world problems like large files, figure images, schema mismatches, and long-running generations.
 
-The hardest parts were not the LLM calls — they were **resumable ingestion**, **trustworthy citations**, and **compressing large notebooks** into something Studio can use without losing the core ideas.
+The hardest parts were not the LLM calls — they were **resumable ingestion**, **trustworthy citations**, **compressing large notebooks** into something Studio can use without losing the core ideas, and **validating Mermaid diagrams** in a server environment that was never designed to run browser libraries.
 
 ---
 

@@ -435,7 +435,7 @@ export function StudioArtifactViewPanel({
 
   if (isFullHeight) {
     return (
-      <div className="h-full min-h-0 max-w-5xl mx-auto">
+      <div className="flex h-full min-h-0 flex-1 flex-col max-w-5xl mx-auto w-full">
         <StudioArtifactViewer
           artifact={activeArtifactDetail}
           sources={sources}
