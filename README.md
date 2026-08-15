@@ -149,6 +149,8 @@ Built by **[Devyansh Yadav](https://www.devyanshyadav.com/)**
 
 ## License
 
-[MIT](LICENSE) — use, modify, and deploy freely.
+LibreNote AI is released under the [MIT License](LICENSE). You may use, modify, and deploy it freely.
+
+**Attribution:** If you fork, redistribute, or build on this project, please credit the original source — see **[ATTRIBUTION.md](ATTRIBUTION.md)** for suggested wording and trademark notes.
 
 *NotebookLM and Google Gemini are trademarks of Google LLC. LibreNote AI is an independent open-source project and is not affiliated with or endorsed by Google.*
