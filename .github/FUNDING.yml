@@ -1,13 +1,7 @@
 # These are supported funding model platforms
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+#
+# Requires GitHub Sponsors on your account:
+# https://github.com/sponsors/devyanshyadav
 
 github: [devyanshyadav]
-
-# patreon: your-patreon-username
-# open_collective: your-open-collective-username
-# ko_fi: your-ko-fi-username
-# buy_me_a_coffee: your-bmc-username
-# polar: your-polar-username
-
-custom:
-  - https://www.devyanshyadav.com/
